@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Engine/DataTable.h"
+#include "Engine/Texture2D.h"
+#include "BaseConstruct.h"
 #include "ShooterSandboxGlobal.generated.h"
 
 UENUM(BlueprintType)
@@ -26,4 +28,25 @@ struct FConstructsDatabase : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString constructName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString displayName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UTexture2D* image;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FText description;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int health;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int constructionCost;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool isGridAligned;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<ABaseConstruct> constructBP;
 };

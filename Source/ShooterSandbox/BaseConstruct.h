@@ -12,15 +12,33 @@ class SHOOTERSANDBOX_API ABaseConstruct : public AActor
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
+
 	ABaseConstruct();
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+
+//=#=#=#=#= VARIABLES =#=#=#=#=
+
+	UPROPERTY(Replicated)
+	int health;
+
+	UPROPERTY(Replicated)
+	class AShooterSandboxController* ownerController;
 
 public:	
-	// Called every frame
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool isGridAligned;
+
+//=#=#=#=#= FUNCTIONS =#=#=#=#=
+
+	virtual void BeginPlay() override;
+
 	virtual void Tick(float DeltaTime) override;
 
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser) override;
+
+	void SetConstructOwner(class AShooterSandboxController* owner);
+
+	class AShooterSandboxController* GetConstructOwner();
 };

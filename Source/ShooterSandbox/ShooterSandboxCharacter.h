@@ -22,7 +22,9 @@ public:
 
 	AShooterSandboxCharacter();
 
-	//*** VARIABLES ***
+	const float BUILD_DISTANCE = 1500;
+
+//=#=#=#=#= VARIABLES =#=#=#=#=
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	float BaseTurnRate;
@@ -36,14 +38,32 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	TSubclassOf<UCameraShake> endRunCamShake;
 
+//=#=#=#=#= FUNCTIONS =#=#=#=#=
 
-	//*** FUNCTIONS ***
+	virtual void BeginPlay() override;
 
-	virtual void BeginPlay();
+	//*** Other Functions ***
+
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	void ToggleConstructionMenu();
+
+	UFUNCTION(BlueprintCallable, Category = "Construction")
+	bool GetSpawnLocation(FVector &spawnLocation);
+
+	//*** RPC Functions ***
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Construction")
+	void TryQuickConstruct();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_ToggleRun(float newSpeed);
+
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Construction")
+	void TryConstruct(TSubclassOf<class ABaseConstruct> construct);
 
 protected:
 
-	//*** VARIABLES ***
+//=#=#=#=#= VARIABLES =#=#=#=#=
 
 	bool bIsRunning;
 
@@ -52,28 +72,18 @@ protected:
 
 	APlayerController* myController;
 
-	//*** FUNCTIONS ***
+//=#=#=#=#= FUNCTIONS =#=#=#=#=
 	
-	void MoveForward(float Value);
-
-	void MoveRight(float Value);
-
-	void TurnAtRate(float Rate);
-
-	void LookUpAtRate(float Rate);
-
-	void ToggleCrouch();
-
-	UFUNCTION(BlueprintCallable, Category = "Movement")
-	void ToggleRun();
-
-	UFUNCTION(BlueprintCallable, Category = "HUD")
-	void ToggleConstructionMenu();
-
-
-protected:
-
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	//*** Movement Functions ***
+
+	void MoveForward(float Value);
+	void MoveRight(float Value);
+	void TurnAtRate(float Rate);
+	void LookUpAtRate(float Rate);
+	void ToggleCrouch();
+	void ToggleRun();
 
 public:
 

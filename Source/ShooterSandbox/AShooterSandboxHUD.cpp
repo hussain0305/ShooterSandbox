@@ -71,8 +71,9 @@ void AAShooterSandboxHUD::ToggleConstructionMenu()
 			constructionMenu->AddToViewport();
 			APlayerController* playerController = GetOwningPlayerController();
 			if (playerController) {
-				playerController->SetInputMode(FInputModeGameAndUI());//FInputModeUIOnly
+				playerController->SetInputMode(FInputModeGameAndUI());
 				playerController->bShowMouseCursor = true;
+				constructionMenu->bIsFocusable = true;
 			}
 		}
 	}
@@ -85,6 +86,7 @@ void AAShooterSandboxHUD::ToggleConstructionMenu()
 			if (playerController) {
 				playerController->SetInputMode(FInputModeGameOnly());
 				playerController->bShowMouseCursor = false;
+				constructionMenu->bIsFocusable = false;
 			}
 		}
 	}

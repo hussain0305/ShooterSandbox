@@ -13,7 +13,24 @@ class AShooterSandboxGameMode : public AGameModeBase
 
 public:
 	AShooterSandboxGameMode();
+
+//=#=#=#=#= FUNCTIONS =#=#=#=#=
+
+	void PostLogin(APlayerController* NewPlayer) override;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Construction Grid")
+	float gridSizeInUnits;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
+	TSubclassOf<class AShooterSandboxCharacter> playerCharacterToSpawn;
+
+	void Server_RespawnPlayer(APlayerController* playerController);
+
+	void Server_SpawnConstruct(TSubclassOf<class ABaseConstruct> construct, class AShooterSandboxController* playerController, FVector spawnPosition, FRotator spawnRotation);
+
+	void Temp_PrintLog();
 };
 
 
 
+//UFUNCTION(Server, Reliable, WithValidation)

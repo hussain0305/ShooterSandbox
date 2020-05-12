@@ -14,4 +14,8 @@ class SHOOTERSANDBOX_API AShooterSandboxController : public APlayerController
 {
 	GENERATED_BODY()
 	
+public:
+
+	UFUNCTION(Client, reliable, WithValidation)
+	void ClientPostLogin();
 };

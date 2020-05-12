@@ -1,11 +1,14 @@
 #include "ShooterSandboxCharacter.h"
 #include "AShooterSandboxHUD.h"
 #include "ShooterSandboxController.h"
+#include "ShooterSandboxGameMode.h"
+#include "BaseConstruct.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -14,11 +17,8 @@ AShooterSandboxCharacter::AShooterSandboxCharacter()
 {
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
-	BaseTurnRate = 45.f;
-	BaseLookUpRate = 45.f;
-
-	bIsRunning = false;
-	walkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	SetReplicates(true);
+	SetReplicatingMovement(true);
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = true;
@@ -38,6 +38,12 @@ AShooterSandboxCharacter::AShooterSandboxCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+
+	BaseTurnRate = 45.f;
+	BaseLookUpRate = 45.f;
+
+	bIsRunning = false;
+	walkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 }
 
 void AShooterSandboxCharacter::BeginPlay()
@@ -60,6 +66,7 @@ void AShooterSandboxCharacter::SetupPlayerInputComponent(class UInputComponent* 
 	PlayerInputComponent->BindAction("Run", IE_Released, this, &AShooterSandboxCharacter::ToggleRun);
 
 	PlayerInputComponent->BindAction("ConstructionMenu", IE_Pressed, this, &AShooterSandboxCharacter::ToggleConstructionMenu);
+	PlayerInputComponent->BindAction("QuickConstruct", IE_Pressed, this, &AShooterSandboxCharacter::TryQuickConstruct);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AShooterSandboxCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AShooterSandboxCharacter::MoveRight);
@@ -92,23 +99,29 @@ void AShooterSandboxCharacter::ToggleCrouch()
 	}
 }
 
+
 void AShooterSandboxCharacter::ToggleRun()
 {
 	bIsRunning = !bIsRunning;
 	if (bIsRunning) {
 		GetCharacterMovement()->MaxWalkSpeed = RUN_MULTIPLIER * walkSpeed;
+		Server_ToggleRun(RUN_MULTIPLIER * walkSpeed);
 		myController->ClientPlayCameraShake(runCamShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
 	}
 	else {
 		GetCharacterMovement()->MaxWalkSpeed = walkSpeed;
+		Server_ToggleRun(walkSpeed);
 		myController->ClientStopCameraShake(runCamShake);
 		myController->ClientPlayCameraShake(endRunCamShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
 	}
 }
 
-void AShooterSandboxCharacter::ToggleConstructionMenu()
-{
-	Cast<AAShooterSandboxHUD>(Cast<AShooterSandboxController>(GetController())->GetHUD())->ToggleConstructionMenu();
+bool AShooterSandboxCharacter::Server_ToggleRun_Validate(float newSpeed) {
+	return true;
+}
+
+void AShooterSandboxCharacter::Server_ToggleRun_Implementation(float newSpeed) {
+	GetCharacterMovement()->MaxWalkSpeed = newSpeed;
 }
 
 void AShooterSandboxCharacter::MoveForward(float Value)
@@ -138,4 +151,63 @@ void AShooterSandboxCharacter::MoveRight(float Value)
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
 	}
+}
+
+bool AShooterSandboxCharacter::GetSpawnLocation(FVector &spawnLocation)
+{
+	if (!GetWorld() || !GetWorld()->GetAuthGameMode<AShooterSandboxGameMode>())
+	{
+		return false;
+	}
+
+	FCollisionQueryParams traceParams;
+	traceParams.AddIgnoredActor(this);
+
+	FHitResult hit;
+
+	if (GetWorld()->LineTraceSingleByObjectType(hit, FollowCamera->GetComponentLocation(),
+		(FollowCamera->GetComponentLocation() + (FollowCamera->GetForwardVector() * BUILD_DISTANCE)),
+		ECC_GameTraceChannel1, traceParams)){
+
+		spawnLocation = hit.ImpactPoint;
+
+		float gridSize = GetWorld()->GetAuthGameMode<AShooterSandboxGameMode>()->gridSizeInUnits;
+		int gridNoX = spawnLocation.X / gridSize;
+		int gridNoY = spawnLocation.Y / gridSize;
+
+		float gridAlignedX = (gridNoX * gridSize) + (spawnLocation.X < 0 ? -gridSize / 2 : gridSize / 2);
+		float gridAlignedY = (gridNoY * gridSize) + (spawnLocation.Y < 0 ? -gridSize / 2 : gridSize / 2);
+
+		spawnLocation = FVector(gridAlignedX, gridAlignedY, spawnLocation.Z);
+
+		return true;
+	}
+
+	spawnLocation = FVector(1000, 1000, 1000);
+	return false;
+}
+
+void AShooterSandboxCharacter::ToggleConstructionMenu()
+{
+	Cast<AAShooterSandboxHUD>(Cast<AShooterSandboxController>(GetController())->GetHUD())->ToggleConstructionMenu();
+}
+
+bool AShooterSandboxCharacter::TryConstruct_Validate(TSubclassOf<ABaseConstruct> construct) {
+	return true;
+}
+
+void AShooterSandboxCharacter::TryConstruct_Implementation(TSubclassOf<ABaseConstruct> construct)
+{
+	UWorld* world = GetWorld();
+	if (construct == nullptr || world == nullptr) {
+		return;
+	}
+
+	FVector spawnLocation;
+	if (GetSpawnLocation(spawnLocation)) {
+		if (world->GetAuthGameMode<AShooterSandboxGameMode>()) {
+			world->GetAuthGameMode<AShooterSandboxGameMode>()->Server_SpawnConstruct(construct, Cast<AShooterSandboxController>(GetController()), spawnLocation, GetActorRotation());
+		}
+	}
+	
 }

@@ -38,11 +38,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	TSubclassOf<UCameraShake> endRunCamShake;
 
+
+
 //=#=#=#=#= FUNCTIONS =#=#=#=#=
 
 	virtual void BeginPlay() override;
 
 	//*** Other Functions ***
+	UFUNCTION(BlueprintCallable, Category = "Camera")
+	void ReattachCamera(UCameraComponent* cam);
 
 	UFUNCTION(BlueprintCallable, Category = "HUD")
 	void ToggleConstructionMenu();
@@ -50,16 +54,26 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Construction")
 	bool GetSpawnLocation(FVector &spawnLocation);
 
-	//*** RPC Functions ***
-
 	UFUNCTION(BlueprintImplementableEvent, Category = "Construction")
 	void TryQuickConstruct();
+
+	UFUNCTION(BlueprintCallable, Category = "Gameplay")
+	void SetOffensiveConstructInVicinity(class ABaseOffensiveConstruct* construct);
+
+	UFUNCTION(BlueprintCallable, Category = "Gameplay")
+	class ABaseOffensiveConstruct* GetOffensiveConstructInVicinity();
+
+	//*** RPC Functions ***
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_ToggleRun(float newSpeed);
 
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Construction")
 	void TryConstruct(TSubclassOf<class ABaseConstruct> construct);
+
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Gameplay")
+	void AttemptControlOffensiveConstruct();
+
 
 protected:
 
@@ -70,7 +84,10 @@ protected:
 	float walkSpeed;
 	const float RUN_MULTIPLIER = 3;
 
-	APlayerController* myController;
+	class AShooterSandboxController* myController;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay")
+	class ABaseOffensiveConstruct* currentConstructInVicinity;
 
 //=#=#=#=#= FUNCTIONS =#=#=#=#=
 	

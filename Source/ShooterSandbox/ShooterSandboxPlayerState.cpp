@@ -32,9 +32,10 @@ int AShooterSandboxPlayerState::GetKills()
 	return kills;
 }
 
-void AShooterSandboxPlayerState::HasConstructed()
+void AShooterSandboxPlayerState::HasConstructed(int cost)
 {
 	numConstructsConstructed++;
+	energy -= cost;
 }
 
 int AShooterSandboxPlayerState::GetNumConstructsBuilt()

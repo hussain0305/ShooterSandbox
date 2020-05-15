@@ -63,7 +63,15 @@ void AShooterSandboxGameMode::Server_RespawnPlayer(APlayerController * playerCon
 
 void AShooterSandboxGameMode::Server_SpawnConstruct(TSubclassOf<ABaseConstruct> construct, AShooterSandboxController* playerController, FVector spawnPosition, FRotator spawnRotation)//_Implementation
 {
+	if (construct == nullptr) {
+		return;
+	}
+
+	//Raise the construct up slightly so it doesn't collide with the building floor
+	spawnPosition += construct.GetDefaultObject()->GetActorUpVector() * 1;
+
 	FActorSpawnParameters spawnParams; 
+	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
 	spawnParams.Owner = playerController->GetCharacter(); 
 	spawnParams.Instigator = playerController->GetPawn();
 	UWorld* world = GetWorld();
@@ -72,9 +80,13 @@ void AShooterSandboxGameMode::Server_SpawnConstruct(TSubclassOf<ABaseConstruct> 
 		ABaseConstruct* spawnedConstruct = world->SpawnActor<ABaseConstruct>(construct, spawnPosition, spawnRotation, spawnParams);
 
 		if (spawnedConstruct) {
-			spawnedConstruct->SetConstructOwner(playerController);
-			Cast<AShooterSandboxPlayerState>(playerController->PlayerState)->HasConstructed();
+			spawnedConstruct->SetConstructedBy(playerController);
+			Cast<AShooterSandboxPlayerState>(playerController->PlayerState)->HasConstructed(construct.GetDefaultObject()->constructionCost);
+			Cast<AAShooterSandboxHUD>(playerController->GetHUD())->ShowAlertMessage("" + construct.GetDefaultObject()->constructName + " constructed");
 			Temp_PrintLog();
+		}
+		else {
+			Cast<AAShooterSandboxHUD>(playerController->GetHUD())->ShowAlertMessage("Build failed. Another construct already exists there");
 		}
 	}
 }

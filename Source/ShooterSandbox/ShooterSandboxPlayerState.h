@@ -61,7 +61,7 @@ public:
 	int GetKills();
 
 	UFUNCTION(BlueprintCallable, Category = "Round Stats")
-	void HasConstructed();
+	void HasConstructed(int cost);
 	
 	UFUNCTION(BlueprintCallable, Category = "Round Stats")
 	int GetNumConstructsBuilt();

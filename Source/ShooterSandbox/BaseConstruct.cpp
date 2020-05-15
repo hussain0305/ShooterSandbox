@@ -33,19 +33,21 @@ float ABaseConstruct::TakeDamage(float DamageAmount, FDamageEvent const & Damage
 		return health;
 	}
 
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
 	health -= DamageAmount;
 
 	return health;
 }
 
-void ABaseConstruct::SetConstructOwner(AShooterSandboxController* owner)
+void ABaseConstruct::SetConstructedBy(AShooterSandboxController* owner)
 {
-	ownerController = owner;
+	constructedBy = owner;
 }
 
-AShooterSandboxController* ABaseConstruct::GetConstructOwner()
+AShooterSandboxController* ABaseConstruct::GetConstructedBy()
 {
-	return ownerController;
+	return constructedBy;
 }
 
 void ABaseConstruct::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const 
@@ -53,5 +55,5 @@ void ABaseConstruct::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);  
 	
 	DOREPLIFETIME(ABaseConstruct, health);
-	DOREPLIFETIME(ABaseConstruct, ownerController);
+	DOREPLIFETIME(ABaseConstruct, constructedBy);
 }

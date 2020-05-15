@@ -7,7 +7,7 @@
 #include "BaseConstruct.generated.h"
 
 UCLASS()
-class SHOOTERSANDBOX_API ABaseConstruct : public AActor
+class SHOOTERSANDBOX_API ABaseConstruct : public APawn
 {
 	GENERATED_BODY()
 	
@@ -23,12 +23,20 @@ protected:
 	int health;
 
 	UPROPERTY(Replicated)
-	class AShooterSandboxController* ownerController;
+	class AShooterSandboxController* constructedBy;
 
 public:	
 
+//=#=#=#=#= VARIABLES =#=#=#=#=
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool isGridAligned;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString constructName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int constructionCost;
 
 //=#=#=#=#= FUNCTIONS =#=#=#=#=
 
@@ -38,7 +46,7 @@ public:
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser) override;
 
-	void SetConstructOwner(class AShooterSandboxController* owner);
+	void SetConstructedBy(class AShooterSandboxController* owner);
 
-	class AShooterSandboxController* GetConstructOwner();
+	class AShooterSandboxController* GetConstructedBy();
 };

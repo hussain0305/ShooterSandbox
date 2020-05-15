@@ -2,7 +2,9 @@
 #include "AShooterSandboxHUD.h"
 #include "ShooterSandboxController.h"
 #include "ShooterSandboxGameMode.h"
+#include "ConstructibleSurface.h"
 #include "BaseConstruct.h"
+#include "BaseOffensiveConstruct.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -50,7 +52,7 @@ void AShooterSandboxCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	myController = UGameplayStatics::GetPlayerController(this, 0);
+	myController = Cast<AShooterSandboxController>(UGameplayStatics::GetPlayerController(this, 0));
 }
 
 void AShooterSandboxCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -67,6 +69,8 @@ void AShooterSandboxCharacter::SetupPlayerInputComponent(class UInputComponent* 
 
 	PlayerInputComponent->BindAction("ConstructionMenu", IE_Pressed, this, &AShooterSandboxCharacter::ToggleConstructionMenu);
 	PlayerInputComponent->BindAction("QuickConstruct", IE_Pressed, this, &AShooterSandboxCharacter::TryQuickConstruct);
+
+	PlayerInputComponent->BindAction("Use", IE_Pressed, this, &AShooterSandboxCharacter::AttemptControlOffensiveConstruct);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AShooterSandboxCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AShooterSandboxCharacter::MoveRight);
@@ -169,22 +173,39 @@ bool AShooterSandboxCharacter::GetSpawnLocation(FVector &spawnLocation)
 		(FollowCamera->GetComponentLocation() + (FollowCamera->GetForwardVector() * BUILD_DISTANCE)),
 		ECC_GameTraceChannel1, traceParams)){
 
-		spawnLocation = hit.ImpactPoint;
+		if (Cast<AConstructibleSurface>(hit.Actor)) {
+			spawnLocation = hit.ImpactPoint;
 
-		float gridSize = GetWorld()->GetAuthGameMode<AShooterSandboxGameMode>()->gridSizeInUnits;
-		int gridNoX = spawnLocation.X / gridSize;
-		int gridNoY = spawnLocation.Y / gridSize;
+			float gridSize = Cast<AConstructibleSurface>(hit.Actor)->gridSizeInUnits;
+			int gridNoX = spawnLocation.X / gridSize;
+			int gridNoY = spawnLocation.Y / gridSize;
 
-		float gridAlignedX = (gridNoX * gridSize) + (spawnLocation.X < 0 ? -gridSize / 2 : gridSize / 2);
-		float gridAlignedY = (gridNoY * gridSize) + (spawnLocation.Y < 0 ? -gridSize / 2 : gridSize / 2);
+			float gridAlignedX = (gridNoX * gridSize) + (spawnLocation.X < 0 ? -gridSize / 2 : gridSize / 2);
+			float gridAlignedY = (gridNoY * gridSize) + (spawnLocation.Y < 0 ? -gridSize / 2 : gridSize / 2);
 
-		spawnLocation = FVector(gridAlignedX, gridAlignedY, spawnLocation.Z);
+			spawnLocation = FVector(gridAlignedX, gridAlignedY, spawnLocation.Z);
 
-		return true;
+			return true;
+		}
 	}
 
 	spawnLocation = FVector(1000, 1000, 1000);
 	return false;
+}
+
+void AShooterSandboxCharacter::SetOffensiveConstructInVicinity(ABaseOffensiveConstruct* construct)
+{
+	currentConstructInVicinity = construct;
+}
+
+ABaseOffensiveConstruct* AShooterSandboxCharacter::GetOffensiveConstructInVicinity()
+{
+	return currentConstructInVicinity;
+}
+
+void AShooterSandboxCharacter::ReattachCamera(UCameraComponent * cam)
+{
+	cam->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 }
 
 void AShooterSandboxCharacter::ToggleConstructionMenu()
@@ -206,8 +227,20 @@ void AShooterSandboxCharacter::TryConstruct_Implementation(TSubclassOf<ABaseCons
 	FVector spawnLocation;
 	if (GetSpawnLocation(spawnLocation)) {
 		if (world->GetAuthGameMode<AShooterSandboxGameMode>()) {
-			world->GetAuthGameMode<AShooterSandboxGameMode>()->Server_SpawnConstruct(construct, Cast<AShooterSandboxController>(GetController()), spawnLocation, GetActorRotation());
+			world->GetAuthGameMode<AShooterSandboxGameMode>()->Server_SpawnConstruct(construct, myController, spawnLocation, GetActorRotation());
 		}
 	}
 	
 }
+
+bool AShooterSandboxCharacter::AttemptControlOffensiveConstruct_Validate() {
+	return true;
+}
+
+void AShooterSandboxCharacter::AttemptControlOffensiveConstruct_Implementation()
+{
+	if (currentConstructInVicinity) {
+		currentConstructInVicinity->ControlOffensive(myController);
+	}
+}
+

@@ -25,6 +25,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ToggleConstructionMenu();
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "UI Messages")
+	void ShowAlertMessage(const FString& message);
+
+
 protected:
 
 	UPROPERTY(BlueprintReadWrite)

@@ -18,9 +18,6 @@ public:
 
 	void PostLogin(APlayerController* NewPlayer) override;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Construction Grid")
-	float gridSizeInUnits;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
 	TSubclassOf<class AShooterSandboxCharacter> playerCharacterToSpawn;
 

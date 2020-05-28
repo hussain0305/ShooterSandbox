@@ -43,7 +43,7 @@ void AShooterSandboxGameMode::PostLogin(APlayerController * NewPlayer)
 	Server_RespawnPlayer(NewPlayer);
 }
 
-void AShooterSandboxGameMode::Server_RespawnPlayer(APlayerController * playerController)//_Implementation
+void AShooterSandboxGameMode::Server_RespawnPlayer(APlayerController * playerController)
 {
 	if (playerController == nullptr) {
 		return;

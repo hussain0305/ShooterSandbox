@@ -16,30 +16,32 @@ class SHOOTERSANDBOX_API AShooterSandboxPlayerState : public APlayerState
 
 public:
 
-	//UPROPERTY(Transient, Replicated)
+	UPROPERTY(Replicated)
 	int playerNumber;
+
+	void BeginPlay() override;
 
 protected:
 
-	//UPROPERTY(Transient, Replicated)
+	UPROPERTY(Replicated)
 	int playerScore;
 
-	UPROPERTY(Transient, Replicated)
+	UPROPERTY(Replicated)
 	int health;
 
-	//UPROPERTY(Transient, Replicated)
+	UPROPERTY(Replicated)
 	int energy;
 
-	//UPROPERTY(Transient, Replicated)
+	UPROPERTY(Replicated)
 	int numConstructsConstructed;
 
-	//UPROPERTY(Transient, Replicated)
+	UPROPERTY(Replicated)
 	int numConstructsBroken;
 
-	//UPROPERTY(Transient, Replicated)
+	UPROPERTY(Replicated)
 	int kills;
 
-	//UPROPERTY(Transient, Replicated)
+	UPROPERTY(Replicated)
 	int deaths;
 
 
@@ -71,5 +73,4 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Round Stats")
 	int GetNumConstructsBroken();
-
 };

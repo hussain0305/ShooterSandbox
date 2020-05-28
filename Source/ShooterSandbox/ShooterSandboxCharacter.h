@@ -7,6 +7,8 @@
 #include "Camera/CameraShake.h"
 #include "ShooterSandboxCharacter.generated.h"
 
+enum class EMovementState : uint8;
+
 UCLASS(config=Game)
 class AShooterSandboxCharacter : public ACharacter
 {
@@ -26,6 +28,8 @@ public:
 
 //=#=#=#=#= VARIABLES =#=#=#=#=
 
+	FTimerHandle movementStateMonitoring;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	float BaseTurnRate;
 
@@ -38,48 +42,63 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	TSubclassOf<UCameraShake> endRunCamShake;
 
-
-
 //=#=#=#=#= FUNCTIONS =#=#=#=#=
 
 	virtual void BeginPlay() override;
 
-	//*** Other Functions ***
-	UFUNCTION(BlueprintCallable, Category = "Camera")
-	void ReattachCamera(UCameraComponent* cam);
+	//************ Movement State Functions ************
+
+	void MonitorMovementState();
+
+	void SetCurrentEMovementState(EMovementState newState);
+
+	EMovementState GetCurrentEMovementState();
+
+	//************ Construction Related Functions ************
 
 	UFUNCTION(BlueprintCallable, Category = "HUD")
 	void ToggleConstructionMenu();
 
 	UFUNCTION(BlueprintCallable, Category = "Construction")
-	bool GetSpawnLocation(FVector &spawnLocation);
+	void TryConstruct(TSubclassOf<class ABaseConstruct> construct);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Construction")
+	UFUNCTION(BlueprintCallable, Category = "Construction")
 	void TryQuickConstruct();
 
-	UFUNCTION(BlueprintCallable, Category = "Gameplay")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Construction")
+	void TempConstruct();
+	
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Construction")
+	void ServerConstruct(TSubclassOf<class ABaseConstruct> construct, class AShooterSandboxController* constructorController, FVector spawnLocation, FRotator spawnRotation);
+
+	//************ Other Functions ************
+
+	UFUNCTION(BlueprintCallable, Category = "Construction")
+	bool GetSpawnLocation(FVector &spawnLocation);
+
+
+	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Gameplay")
 	void SetOffensiveConstructInVicinity(class ABaseOffensiveConstruct* construct);
 
 	UFUNCTION(BlueprintCallable, Category = "Gameplay")
 	class ABaseOffensiveConstruct* GetOffensiveConstructInVicinity();
 
-	//*** RPC Functions ***
+	//************ RPC Functions ************
 
-	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_ToggleRun(float newSpeed);
-
-	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Construction")
-	void TryConstruct(TSubclassOf<class ABaseConstruct> construct);
+	void AttemptControlOffensiveConstruct();
 
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Gameplay")
-	void AttemptControlOffensiveConstruct();
+	void Server_AttemptControlOffensiveConstruct(class ABaseOffensiveConstruct* constructToControl, class AShooterSandboxController* controllerController);
+
+	UFUNCTION(BlueprintCallable)
+	void PrintTestData();
 
 
 protected:
 
 //=#=#=#=#= VARIABLES =#=#=#=#=
-
 	bool bIsRunning;
+	EMovementState currentMovementState;
 
 	float walkSpeed;
 	const float RUN_MULTIPLIER = 3;
@@ -93,14 +112,18 @@ protected:
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	//*** Movement Functions ***
+	//************ Movement Functions ************
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 	void TurnAtRate(float Rate);
 	void LookUpAtRate(float Rate);
 	void ToggleCrouch();
-	void ToggleRun();
+	void ToggleRunOn();
+	void ToggleRunOff();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_ToggleRun(float newSpeed);
 
 public:
 

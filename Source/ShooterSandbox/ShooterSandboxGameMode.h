@@ -27,7 +27,3 @@ public:
 
 	void Temp_PrintLog();
 };
-
-
-
-//UFUNCTION(Server, Reliable, WithValidation)

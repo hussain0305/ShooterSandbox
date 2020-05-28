@@ -18,4 +18,13 @@ public:
 
 	UFUNCTION(Client, reliable, WithValidation)
 	void ClientPostLogin();
+
+	UFUNCTION(Client, reliable, WithValidation, BlueprintCallable, Category = "Player Stats")
+	void PostConstructionUpdate(TSubclassOf<ABaseConstruct> construct);
+	
+	UFUNCTION(Client, reliable, WithValidation, BlueprintCallable, Category = "Player HUD")
+	void ProxyForHUD_AlertMessage(const FString& message);
+
+	void PossessThis(class ABaseOffensiveConstruct* constructToControl);
+	void PossessThis(class AShooterSandboxCharacter* characterToControl);
 };

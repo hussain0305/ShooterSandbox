@@ -2,6 +2,20 @@
 
 #include "ShooterSandboxPlayerState.h"
 #include "Net/UnrealNetwork.h"
+#include "Kismet/GameplayStatics.h"
+
+void AShooterSandboxPlayerState::BeginPlay()
+{
+	Super::BeginPlay();
+
+	playerScore = 0;
+	health = 100;
+	energy = 0;
+	numConstructsConstructed = 0;
+	numConstructsBroken = 0;
+	kills = 0;
+	deaths = 0;
+}
 
 int AShooterSandboxPlayerState::TakeHealthDamage(int damageAmount)
 {
@@ -60,10 +74,10 @@ void AShooterSandboxPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AShooterSandboxPlayerState, health);
-	//DOREPLIFETIME(AShooterSandboxPlayerState, playerScore);
-	//DOREPLIFETIME(AShooterSandboxPlayerState, playerNumber);
-	//DOREPLIFETIME(AShooterSandboxPlayerState, energy);
-	//DOREPLIFETIME(AShooterSandboxPlayerState, numConstructsConstructed);
-	//DOREPLIFETIME(AShooterSandboxPlayerState, numConstructsBroken);
-	//DOREPLIFETIME(AShooterSandboxPlayerState, kills);
+	DOREPLIFETIME(AShooterSandboxPlayerState, playerScore);
+	DOREPLIFETIME(AShooterSandboxPlayerState, playerNumber);
+	DOREPLIFETIME(AShooterSandboxPlayerState, energy);
+	DOREPLIFETIME(AShooterSandboxPlayerState, numConstructsConstructed);
+	DOREPLIFETIME(AShooterSandboxPlayerState, numConstructsBroken);
+	DOREPLIFETIME(AShooterSandboxPlayerState, kills);
 }

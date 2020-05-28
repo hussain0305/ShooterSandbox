@@ -1,7 +1,9 @@
 #include "ShooterSandboxCharacter.h"
 #include "AShooterSandboxHUD.h"
+#include "ShooterSandboxPlayerState.h"
 #include "ShooterSandboxController.h"
 #include "ShooterSandboxGameMode.h"
+#include "ShooterSandboxGlobal.h"
 #include "ConstructibleSurface.h"
 #include "BaseConstruct.h"
 #include "BaseOffensiveConstruct.h"
@@ -48,13 +50,6 @@ AShooterSandboxCharacter::AShooterSandboxCharacter()
 	walkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 }
 
-void AShooterSandboxCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-
-	myController = Cast<AShooterSandboxController>(UGameplayStatics::GetPlayerController(this, 0));
-}
-
 void AShooterSandboxCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	check(PlayerInputComponent);
@@ -64,13 +59,14 @@ void AShooterSandboxCharacter::SetupPlayerInputComponent(class UInputComponent* 
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AShooterSandboxCharacter::ToggleCrouch);
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AShooterSandboxCharacter::ToggleCrouch);
 
-	PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AShooterSandboxCharacter::ToggleRun);
-	PlayerInputComponent->BindAction("Run", IE_Released, this, &AShooterSandboxCharacter::ToggleRun);
+	PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AShooterSandboxCharacter::ToggleRunOn);
+	PlayerInputComponent->BindAction("Run", IE_Released, this, &AShooterSandboxCharacter::ToggleRunOff);
 
 	PlayerInputComponent->BindAction("ConstructionMenu", IE_Pressed, this, &AShooterSandboxCharacter::ToggleConstructionMenu);
-	PlayerInputComponent->BindAction("QuickConstruct", IE_Pressed, this, &AShooterSandboxCharacter::TryQuickConstruct);
+	PlayerInputComponent->BindAction("QuickConstruct", IE_Pressed, this, &AShooterSandboxCharacter::TempConstruct);//TryQuickConstruct
 
 	PlayerInputComponent->BindAction("Use", IE_Pressed, this, &AShooterSandboxCharacter::AttemptControlOffensiveConstruct);
+	PlayerInputComponent->BindAction("TestData", IE_Pressed, this, &AShooterSandboxCharacter::PrintTestData);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AShooterSandboxCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AShooterSandboxCharacter::MoveRight);
@@ -80,6 +76,18 @@ void AShooterSandboxCharacter::SetupPlayerInputComponent(class UInputComponent* 
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AShooterSandboxCharacter::LookUpAtRate);
 }
+
+void AShooterSandboxCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	myController = Cast<AShooterSandboxController>(GetController());//UGameplayStatics::GetPlayerController(this, 0));//
+
+	currentMovementState = EMovementState::Stationary;
+	GetWorld()->GetTimerManager().SetTimer(movementStateMonitoring, this, &AShooterSandboxCharacter::MonitorMovementState, 0.25f, true);
+}
+
+#pragma region Movement Related
 
 void AShooterSandboxCharacter::TurnAtRate(float Rate)
 {
@@ -91,41 +99,6 @@ void AShooterSandboxCharacter::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
-}
-
-void AShooterSandboxCharacter::ToggleCrouch()
-{
-	if (bIsCrouched) {
-		UnCrouch();
-	}
-	else {
-		Crouch();
-	}
-}
-
-
-void AShooterSandboxCharacter::ToggleRun()
-{
-	bIsRunning = !bIsRunning;
-	if (bIsRunning) {
-		GetCharacterMovement()->MaxWalkSpeed = RUN_MULTIPLIER * walkSpeed;
-		Server_ToggleRun(RUN_MULTIPLIER * walkSpeed);
-		myController->ClientPlayCameraShake(runCamShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
-	}
-	else {
-		GetCharacterMovement()->MaxWalkSpeed = walkSpeed;
-		Server_ToggleRun(walkSpeed);
-		myController->ClientStopCameraShake(runCamShake);
-		myController->ClientPlayCameraShake(endRunCamShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
-	}
-}
-
-bool AShooterSandboxCharacter::Server_ToggleRun_Validate(float newSpeed) {
-	return true;
-}
-
-void AShooterSandboxCharacter::Server_ToggleRun_Implementation(float newSpeed) {
-	GetCharacterMovement()->MaxWalkSpeed = newSpeed;
 }
 
 void AShooterSandboxCharacter::MoveForward(float Value)
@@ -144,12 +117,12 @@ void AShooterSandboxCharacter::MoveForward(float Value)
 
 void AShooterSandboxCharacter::MoveRight(float Value)
 {
-	if ( (Controller != NULL) && (Value != 0.0f) )
+	if ((Controller != NULL) && (Value != 0.0f))
 	{
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
-	
+
 		// get right vector 
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		// add movement in that direction
@@ -157,9 +130,114 @@ void AShooterSandboxCharacter::MoveRight(float Value)
 	}
 }
 
+void AShooterSandboxCharacter::MonitorMovementState()
+{
+	if (GetCharacterMovement()->IsFalling())
+	{
+		if (currentMovementState != EMovementState::Jumping)
+		{
+			SetCurrentEMovementState(EMovementState::Jumping);
+		}
+	}
+	else if (GetCharacterMovement()->Velocity.Size() < 10.0f)
+	{
+		//Stationary
+		if (currentMovementState != EMovementState::Stationary)
+		{
+			if (currentMovementState == EMovementState::Running)
+			{
+				ToggleRunOff();
+			}
+			SetCurrentEMovementState(EMovementState::Stationary);
+		}
+	}
+
+	else if (GetCharacterMovement()->Velocity.Size() < (walkSpeed + 10.0f))
+	{
+		//Walking
+		if (currentMovementState != EMovementState::Walking)
+		{
+			SetCurrentEMovementState(EMovementState::Walking);
+			if (currentMovementState == EMovementState::Running)
+			{
+				ToggleRunOff();
+			}
+		}
+
+	}
+
+	else {
+		if (currentMovementState != EMovementState::Running)
+		{
+			SetCurrentEMovementState(EMovementState::Running);
+		}
+	}
+}
+
+void AShooterSandboxCharacter::SetCurrentEMovementState(EMovementState newState)
+{
+	currentMovementState = newState;
+}
+
+EMovementState AShooterSandboxCharacter::GetCurrentEMovementState()
+{
+	return currentMovementState;
+}
+
+void AShooterSandboxCharacter::ToggleCrouch()
+{
+	if (bIsCrouched) {
+		UnCrouch();
+	}
+	else {
+		Crouch();
+	}
+}
+
+void AShooterSandboxCharacter::ToggleRunOn()
+{
+	//Only continue if player isn't already running
+	if (bIsRunning) {
+		return;
+	}
+
+	bIsRunning = true;
+
+	GetCharacterMovement()->MaxWalkSpeed = RUN_MULTIPLIER * walkSpeed;
+	Server_ToggleRun(RUN_MULTIPLIER * walkSpeed);
+	myController->ClientPlayCameraShake(runCamShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
+}
+
+void AShooterSandboxCharacter::ToggleRunOff()
+{
+	//Only continue if player is already running
+	if (!bIsRunning) {
+		return;
+	}
+
+	bIsRunning = false;
+
+	GetCharacterMovement()->MaxWalkSpeed = walkSpeed;
+	Server_ToggleRun(walkSpeed);
+	myController->ClientStopCameraShake(runCamShake);
+	myController->ClientPlayCameraShake(endRunCamShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
+}
+
+bool AShooterSandboxCharacter::Server_ToggleRun_Validate(float newSpeed)
+{
+	return true;
+}
+
+void AShooterSandboxCharacter::Server_ToggleRun_Implementation(float newSpeed)
+{
+	GetCharacterMovement()->MaxWalkSpeed = newSpeed;
+}
+
+#pragma endregion
+
 bool AShooterSandboxCharacter::GetSpawnLocation(FVector &spawnLocation)
 {
-	if (!GetWorld() || !GetWorld()->GetAuthGameMode<AShooterSandboxGameMode>())
+	if (!GetWorld())
 	{
 		return false;
 	}
@@ -168,12 +246,13 @@ bool AShooterSandboxCharacter::GetSpawnLocation(FVector &spawnLocation)
 	traceParams.AddIgnoredActor(this);
 
 	FHitResult hit;
-
+	
 	if (GetWorld()->LineTraceSingleByObjectType(hit, FollowCamera->GetComponentLocation(),
 		(FollowCamera->GetComponentLocation() + (FollowCamera->GetForwardVector() * BUILD_DISTANCE)),
 		ECC_GameTraceChannel1, traceParams)){
 
-		if (Cast<AConstructibleSurface>(hit.Actor)) {
+		if (Cast<AConstructibleSurface>(hit.Actor))
+		{
 			spawnLocation = hit.ImpactPoint;
 
 			float gridSize = Cast<AConstructibleSurface>(hit.Actor)->gridSizeInUnits;
@@ -193,9 +272,34 @@ bool AShooterSandboxCharacter::GetSpawnLocation(FVector &spawnLocation)
 	return false;
 }
 
-void AShooterSandboxCharacter::SetOffensiveConstructInVicinity(ABaseOffensiveConstruct* construct)
+void AShooterSandboxCharacter::TryConstruct(TSubclassOf<class ABaseConstruct> construct)
+{
+	FVector spawnLocation;
+	if (GetSpawnLocation(spawnLocation)) {
+		ServerConstruct(construct, myController, spawnLocation, GetActorRotation());
+	}
+}
+
+void AShooterSandboxCharacter::TryQuickConstruct()
+{
+	//This function will just call TryConstruct with the "current" selected construct
+}
+
+bool AShooterSandboxCharacter::SetOffensiveConstructInVicinity_Validate(ABaseOffensiveConstruct* construct) {
+	return true;
+}
+
+void AShooterSandboxCharacter::SetOffensiveConstructInVicinity_Implementation(ABaseOffensiveConstruct* construct)//
 {
 	currentConstructInVicinity = construct;
+	if (construct)
+	{
+		Cast<AAShooterSandboxHUD>(myController->GetHUD())->ShowActionPromptMessage("E", ("Control " + construct->constructName));
+	}
+	else
+	{
+		Cast<AAShooterSandboxHUD>(myController->GetHUD())->RemoveActionPromptMessage();
+	}
 }
 
 ABaseOffensiveConstruct* AShooterSandboxCharacter::GetOffensiveConstructInVicinity()
@@ -203,44 +307,69 @@ ABaseOffensiveConstruct* AShooterSandboxCharacter::GetOffensiveConstructInVicini
 	return currentConstructInVicinity;
 }
 
-void AShooterSandboxCharacter::ReattachCamera(UCameraComponent * cam)
-{
-	cam->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
-}
-
 void AShooterSandboxCharacter::ToggleConstructionMenu()
 {
 	Cast<AAShooterSandboxHUD>(Cast<AShooterSandboxController>(GetController())->GetHUD())->ToggleConstructionMenu();
 }
 
-bool AShooterSandboxCharacter::TryConstruct_Validate(TSubclassOf<ABaseConstruct> construct) {
+bool AShooterSandboxCharacter::ServerConstruct_Validate(TSubclassOf<ABaseConstruct> construct, AShooterSandboxController* constructorController, FVector spawnLocation, FRotator spawnRotation)
+{
 	return true;
 }
 
-void AShooterSandboxCharacter::TryConstruct_Implementation(TSubclassOf<ABaseConstruct> construct)
+void AShooterSandboxCharacter::ServerConstruct_Implementation(TSubclassOf<ABaseConstruct> construct, AShooterSandboxController* constructorController, FVector spawnLocation, FRotator spawnRotation)
 {
-	UWorld* world = GetWorld();
-	if (construct == nullptr || world == nullptr) {
+	if (construct == nullptr || constructorController == nullptr)
+	{
 		return;
 	}
 
-	FVector spawnLocation;
-	if (GetSpawnLocation(spawnLocation)) {
-		if (world->GetAuthGameMode<AShooterSandboxGameMode>()) {
-			world->GetAuthGameMode<AShooterSandboxGameMode>()->Server_SpawnConstruct(construct, myController, spawnLocation, GetActorRotation());
-		}
+	UWorld* world = GetWorld();
+	if (world && world->GetAuthGameMode<AShooterSandboxGameMode>())
+	{
+		world->GetAuthGameMode<AShooterSandboxGameMode>()->Server_SpawnConstruct(construct, constructorController, spawnLocation, spawnRotation);
 	}
-	
 }
 
-bool AShooterSandboxCharacter::AttemptControlOffensiveConstruct_Validate() {
+void AShooterSandboxCharacter::AttemptControlOffensiveConstruct()
+{
+	if (currentConstructInVicinity && myController)
+	{
+		if (currentConstructInVicinity->GetIsBeingUsed())
+		{
+			Cast<AAShooterSandboxHUD>(myController->GetHUD())->RemoveActionPromptMessage();
+			currentConstructInVicinity = nullptr;
+			Cast<AAShooterSandboxHUD>(myController->GetHUD())->ShowNotificationMessage("Construct already being controlled");
+			return;
+		}
+		Server_AttemptControlOffensiveConstruct(currentConstructInVicinity, myController);
+		Cast<AAShooterSandboxHUD>(myController->GetHUD())->RemoveActionPromptMessage();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No Controller/vicinity construct inside AttemptControlOffensiveConstruct_Implementation"));
+	}
+}
+
+bool AShooterSandboxCharacter::Server_AttemptControlOffensiveConstruct_Validate(ABaseOffensiveConstruct * constructToControl, AShooterSandboxController * controllerController)
+{
 	return true;
 }
 
-void AShooterSandboxCharacter::AttemptControlOffensiveConstruct_Implementation()
+void AShooterSandboxCharacter::Server_AttemptControlOffensiveConstruct_Implementation(ABaseOffensiveConstruct * constructToControl, AShooterSandboxController * controllerController)
 {
-	if (currentConstructInVicinity) {
-		currentConstructInVicinity->ControlOffensive(myController);
-	}
+	//Construct->Set Owner on client
+	constructToControl->Multicast_ControlOffensive(controllerController);
 }
 
+void AShooterSandboxCharacter::PrintTestData()
+{
+	FString msg = "Number of constructs I've built - " + FString::FromInt(Cast<AShooterSandboxPlayerState>(myController->PlayerState)->GetNumConstructsBuilt());
+	if (Cast<AShooterSandboxPlayerState>(myController->PlayerState)) {
+		msg += " true";
+	}
+	else {
+		msg += " true";
+	}
+	UKismetSystemLibrary::PrintString(this, (TEXT("%s"), *msg));
+}

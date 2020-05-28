@@ -28,6 +28,15 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "UI Messages")
 	void ShowAlertMessage(const FString& message);
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "UI Messages")
+	void ShowNotificationMessage(const FString& message);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "UI Messages")
+	void ShowActionPromptMessage(const FString& keyVal, const FString& msg);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "UI Messages")
+	void RemoveActionPromptMessage();
+
 
 protected:
 

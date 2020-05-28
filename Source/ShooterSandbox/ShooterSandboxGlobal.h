@@ -17,6 +17,13 @@ enum class EConstructType : uint8{
 	Environmental		UMETA(DisplayName = "Environmental")
 };
 
+UENUM(BlueprintType)
+enum class EMovementState : uint8 {
+	Stationary	UMETA(DisplayName = "Stationary"),
+	Walking		UMETA(DisplayName = "Walking"),
+	Running		UMETA(DisplayName = "Running"),
+	Jumping		UMETA(DisplayName = "Jumping"),
+};
 
 USTRUCT(BlueprintType)
 struct FConstructsDatabase : public FTableRowBase

@@ -37,6 +37,11 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "UI Messages")
 	void RemoveActionPromptMessage();
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Quick Construction")
+	void ScrollDownList();
+	
+	UFUNCTION(BlueprintImplementableEvent, Category = "Quick Construction")
+	void ScrollUpList();
 
 protected:
 

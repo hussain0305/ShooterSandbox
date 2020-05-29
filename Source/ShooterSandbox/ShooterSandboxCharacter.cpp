@@ -63,7 +63,10 @@ void AShooterSandboxCharacter::SetupPlayerInputComponent(class UInputComponent* 
 	PlayerInputComponent->BindAction("Run", IE_Released, this, &AShooterSandboxCharacter::ToggleRunOff);
 
 	PlayerInputComponent->BindAction("ConstructionMenu", IE_Pressed, this, &AShooterSandboxCharacter::ToggleConstructionMenu);
-	PlayerInputComponent->BindAction("QuickConstruct", IE_Pressed, this, &AShooterSandboxCharacter::TempConstruct);//TryQuickConstruct
+	PlayerInputComponent->BindAction("QuickConstruct", IE_Pressed, this, &AShooterSandboxCharacter::TryQuickConstruct);//TryQuickConstruct
+
+	PlayerInputComponent->BindAction("MouseWheelDown", IE_Pressed, this, &AShooterSandboxCharacter::MouseWheelDown);
+	PlayerInputComponent->BindAction("MouseWheelUp", IE_Pressed, this, &AShooterSandboxCharacter::MouseWheelUp);
 
 	PlayerInputComponent->BindAction("Use", IE_Pressed, this, &AShooterSandboxCharacter::AttemptControlOffensiveConstruct);
 	PlayerInputComponent->BindAction("TestData", IE_Pressed, this, &AShooterSandboxCharacter::PrintTestData);
@@ -235,6 +238,27 @@ void AShooterSandboxCharacter::Server_ToggleRun_Implementation(float newSpeed)
 
 #pragma endregion
 
+
+void AShooterSandboxCharacter::MouseWheelDown()
+{
+	if (!myController)
+	{
+		return;
+	}
+
+	Cast<AAShooterSandboxHUD>(myController->GetHUD())->ScrollDownList();
+}
+
+void AShooterSandboxCharacter::MouseWheelUp()
+{
+	if (!myController)
+	{
+		return;
+	}
+
+	Cast<AAShooterSandboxHUD>(myController->GetHUD())->ScrollUpList();
+}
+
 bool AShooterSandboxCharacter::GetSpawnLocation(FVector &spawnLocation)
 {
 	if (!GetWorld())
@@ -274,15 +298,15 @@ bool AShooterSandboxCharacter::GetSpawnLocation(FVector &spawnLocation)
 
 void AShooterSandboxCharacter::TryConstruct(TSubclassOf<class ABaseConstruct> construct)
 {
+	if (construct == nullptr)
+	{
+		return;
+	}
+
 	FVector spawnLocation;
 	if (GetSpawnLocation(spawnLocation)) {
 		ServerConstruct(construct, myController, spawnLocation, GetActorRotation());
 	}
-}
-
-void AShooterSandboxCharacter::TryQuickConstruct()
-{
-	//This function will just call TryConstruct with the "current" selected construct
 }
 
 bool AShooterSandboxCharacter::SetOffensiveConstructInVicinity_Validate(ABaseOffensiveConstruct* construct) {

@@ -56,17 +56,17 @@ public:
 
 	//************ Construction Related Functions ************
 
+	void MouseWheelDown();
+	void MouseWheelUp();
+
 	UFUNCTION(BlueprintCallable, Category = "HUD")
 	void ToggleConstructionMenu();
 
 	UFUNCTION(BlueprintCallable, Category = "Construction")
 	void TryConstruct(TSubclassOf<class ABaseConstruct> construct);
 
-	UFUNCTION(BlueprintCallable, Category = "Construction")
-	void TryQuickConstruct();
-
 	UFUNCTION(BlueprintImplementableEvent, Category = "Construction")
-	void TempConstruct();
+	void TryQuickConstruct();
 	
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Construction")
 	void ServerConstruct(TSubclassOf<class ABaseConstruct> construct, class AShooterSandboxController* constructorController, FVector spawnLocation, FRotator spawnRotation);
@@ -103,6 +103,7 @@ protected:
 	float walkSpeed;
 	const float RUN_MULTIPLIER = 3;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class AShooterSandboxController* myController;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay")

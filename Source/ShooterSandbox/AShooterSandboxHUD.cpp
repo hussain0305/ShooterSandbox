@@ -69,6 +69,7 @@ void AAShooterSandboxHUD::ToggleConstructionMenu()
 		if (constructionMenu)
 		{
 			constructionMenu->AddToViewport();
+			BP_SwitchConstructionMode(false);
 			APlayerController* playerController = GetOwningPlayerController();
 			if (playerController) {
 				playerController->SetInputMode(FInputModeGameAndUI());
@@ -82,6 +83,7 @@ void AAShooterSandboxHUD::ToggleConstructionMenu()
 		if (constructionMenu)
 		{
 			constructionMenu->RemoveFromParent();
+			BP_SwitchConstructionMode(true);
 			APlayerController* playerController = GetOwningPlayerController();
 			if (playerController) {
 				playerController->SetInputMode(FInputModeGameOnly());

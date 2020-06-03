@@ -43,6 +43,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Quick Construction")
 	void ScrollUpList();
 
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Construction")
+	void BP_SwitchConstructionMode(bool isOnQuickConstruction);
+
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Energy")
 	void SetHasEnergyPack(bool hasPack);
 

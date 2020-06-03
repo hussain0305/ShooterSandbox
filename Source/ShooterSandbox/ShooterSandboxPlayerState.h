@@ -73,4 +73,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Round Stats")
 	int GetNumConstructsBroken();
+
+	UFUNCTION(BlueprintCallable, Category = "Round Stats")
+	void IncrementOrDecrementEnergyBy(int amount);
+
+	UFUNCTION(BlueprintCallable, Category = "Round Stats")
+	int GetEnergy();
+
 };

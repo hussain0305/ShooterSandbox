@@ -43,6 +43,12 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Quick Construction")
 	void ScrollUpList();
 
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Energy")
+	void SetHasEnergyPack(bool hasPack);
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Energy")
+	void UpdateEnergyLevel(int newEnergyLevel);
+
 protected:
 
 	UPROPERTY(BlueprintReadWrite)

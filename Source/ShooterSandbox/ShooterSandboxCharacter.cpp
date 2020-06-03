@@ -7,15 +7,18 @@
 #include "ConstructibleSurface.h"
 #include "BaseConstruct.h"
 #include "BaseOffensiveConstruct.h"
+#include "EnergyPack.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/BoxComponent.h"
 #include "Components/InputComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Net/UnrealNetwork.h"
 
 AShooterSandboxCharacter::AShooterSandboxCharacter()
 {
@@ -85,7 +88,11 @@ void AShooterSandboxCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	myController = Cast<AShooterSandboxController>(GetController());//UGameplayStatics::GetPlayerController(this, 0));//
+	myPlayerState = Cast<AShooterSandboxPlayerState>(GetPlayerState());
 
+	FTimerHandle delayedFetchComponent;
+	GetWorld()->GetTimerManager().SetTimer(delayedFetchComponent, this, &AShooterSandboxCharacter::EnsureComponentsFetched, 0.5f, false);
+	
 	currentMovementState = EMovementState::Stationary;
 	GetWorld()->GetTimerManager().SetTimer(movementStateMonitoring, this, &AShooterSandboxCharacter::MonitorMovementState, 0.25f, true);
 }
@@ -296,6 +303,43 @@ bool AShooterSandboxCharacter::GetSpawnLocation(FVector &spawnLocation)
 	return false;
 }
 
+bool AShooterSandboxCharacter::AddEnergy_Validate(int amount)
+{
+	return true;
+}
+
+void AShooterSandboxCharacter::AddEnergy_Implementation(int amount)
+{
+	if (!myEnergyPack || !myPlayerState || !myController)
+	{
+		return;
+	}
+
+	myPlayerState->IncrementOrDecrementEnergyBy(amount);
+
+	Cast<AAShooterSandboxHUD>(myController->GetHUD())->UpdateEnergyLevel(myPlayerState->GetEnergy());
+
+	return;
+}
+
+bool AShooterSandboxCharacter::SpendEnergy_Validate(int amount)
+{
+	return true;
+}
+
+void AShooterSandboxCharacter::SpendEnergy_Implementation(int amount)
+{
+	if (!myEnergyPack || myPlayerState->GetEnergy() < amount)
+	{
+		return;
+	}
+	myPlayerState->IncrementOrDecrementEnergyBy(-amount);
+
+	Cast<AAShooterSandboxHUD>(myController->GetHUD())->UpdateEnergyLevel(myPlayerState->GetEnergy());
+	
+	return;
+}
+
 void AShooterSandboxCharacter::TryConstruct(TSubclassOf<class ABaseConstruct> construct)
 {
 	if (construct == nullptr)
@@ -305,6 +349,11 @@ void AShooterSandboxCharacter::TryConstruct(TSubclassOf<class ABaseConstruct> co
 
 	FVector spawnLocation;
 	if (GetSpawnLocation(spawnLocation)) {
+		if (construct.GetDefaultObject()->constructionCost > myPlayerState->GetEnergy())
+		{
+			Cast<AAShooterSandboxHUD>(myController->GetHUD())->ShowNotificationMessage("Not enough Energy");
+			return;
+		}
 		ServerConstruct(construct, myController, spawnLocation, GetActorRotation());
 	}
 }
@@ -326,9 +375,84 @@ void AShooterSandboxCharacter::SetOffensiveConstructInVicinity_Implementation(AB
 	}
 }
 
+bool AShooterSandboxCharacter::PickupEnergyPack_Validate(AEnergyPack* thePack)
+{
+	return true;
+}
+
+void AShooterSandboxCharacter::PickupEnergyPack_Implementation(AEnergyPack* thePack)
+{
+	myEnergyPack = thePack;
+	PickupEnergyPackOnOwningClient(thePack);
+	
+	myEnergyPack->energyPackBody->SetSimulatePhysics(false);
+	myEnergyPack->boxCollider->SetSimulatePhysics(false);
+
+	myEnergyPack->AttachToActor(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("EnergyPackHolder"));
+}
+
+bool AShooterSandboxCharacter::PickupEnergyPackOnOwningClient_Validate(AEnergyPack* thePack)
+{
+	return true;
+}
+
+void AShooterSandboxCharacter::PickupEnergyPackOnOwningClient_Implementation(AEnergyPack* thePack)
+{
+	if (!myController)
+	{
+		return;
+	}
+
+	myEnergyPack = thePack;
+
+	Cast<AAShooterSandboxHUD>(myController->GetHUD())->SetHasEnergyPack(true);
+}
+
+bool AShooterSandboxCharacter::DropEnergyPack_Validate()
+{
+	return true;
+}
+
+void AShooterSandboxCharacter::DropEnergyPack_Implementation()
+{
+	if(!myEnergyPack)
+	{
+		return;
+	}
+
+	myEnergyPack->energyPackBody->SetSimulatePhysics(true);
+	myEnergyPack->boxCollider->SetSimulatePhysics(true);
+
+	myEnergyPack->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	myEnergyPack->ScheduleReactivation();
+
+	DropEnergyPackOnOwningClient();
+}
+
+bool AShooterSandboxCharacter::DropEnergyPackOnOwningClient_Validate()
+{
+	return true;
+}
+
+void AShooterSandboxCharacter::DropEnergyPackOnOwningClient_Implementation()
+{
+	if (!myController) {
+		return;
+	}
+	myEnergyPack = nullptr;
+
+	Cast<AAShooterSandboxHUD>(myController->GetHUD())->SetHasEnergyPack(false);
+}
+
 ABaseOffensiveConstruct* AShooterSandboxCharacter::GetOffensiveConstructInVicinity()
 {
 	return currentConstructInVicinity;
+}
+
+void AShooterSandboxCharacter::EnsureComponentsFetched()
+{
+	myController = Cast<AShooterSandboxController>(GetController());
+	myPlayerState = Cast<AShooterSandboxPlayerState>(GetPlayerState());
 }
 
 void AShooterSandboxCharacter::ToggleConstructionMenu()
@@ -355,6 +479,11 @@ void AShooterSandboxCharacter::ServerConstruct_Implementation(TSubclassOf<ABaseC
 	}
 }
 
+//void AShooterSandboxCharacter::OnRep_EnergyChanged()
+//{
+//	UKismetSystemLibrary::PrintString(this, (TEXT("Energy CHangfed")));
+//}
+
 void AShooterSandboxCharacter::AttemptControlOffensiveConstruct()
 {
 	if (currentConstructInVicinity && myController)
@@ -368,10 +497,6 @@ void AShooterSandboxCharacter::AttemptControlOffensiveConstruct()
 		}
 		Server_AttemptControlOffensiveConstruct(currentConstructInVicinity, myController);
 		Cast<AAShooterSandboxHUD>(myController->GetHUD())->RemoveActionPromptMessage();
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No Controller/vicinity construct inside AttemptControlOffensiveConstruct_Implementation"));
 	}
 }
 
@@ -396,4 +521,13 @@ void AShooterSandboxCharacter::PrintTestData()
 		msg += " true";
 	}
 	UKismetSystemLibrary::PrintString(this, (TEXT("%s"), *msg));
+}
+
+void AShooterSandboxCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AShooterSandboxCharacter, myEnergyPack);
+
+	//DOREPLIFETIME_CONDITION(AShooterSandboxCharacter, energy, COND_OwnerOnly);
 }

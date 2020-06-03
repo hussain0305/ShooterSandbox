@@ -12,7 +12,13 @@ class AShooterSandboxGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 public:
+	const int PULSE_ENERGY_AMOUNT = 10;
+	
 	AShooterSandboxGameMode();
+
+	FTimerHandle energyPulse;
+
+	void BeginPlay() override;
 
 //=#=#=#=#= FUNCTIONS =#=#=#=#=
 
@@ -21,7 +27,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
 	TSubclassOf<class AShooterSandboxCharacter> playerCharacterToSpawn;
 
-	void Server_RespawnPlayer(APlayerController* playerController);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
+	TSubclassOf<class AEnergyPack> playerEnergyPack;
+
+	bool Server_RespawnPlayer(APlayerController* playerController, AShooterSandboxCharacter*& playerCharacter);
+	
+	void Server_GiveEnergyPackToPlayer(AShooterSandboxCharacter*& playerCharacter);
+
+	void Server_GiveEnergyToPlayers();
 
 	void Server_SpawnConstruct(TSubclassOf<class ABaseConstruct> construct, class AShooterSandboxController* playerController, FVector spawnPosition, FRotator spawnRotation);
 

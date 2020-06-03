@@ -42,6 +42,8 @@ public:
 	FRotator rotatingPartDefaultRotation;
 	FRotator barrelPartDefaultRotation;
 
+	//************ Physical Setup ************
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* TurretCamera;
 
@@ -62,6 +64,8 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	class USphereComponent* vicinity;
+
+	//************ Other Stuff ************
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class AShooterProjectile> projectile;

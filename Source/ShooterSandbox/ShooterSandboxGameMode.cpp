@@ -3,6 +3,7 @@
 #include "ShooterSandboxGameMode.h"
 #include "ShooterSandboxCharacter.h"
 #include "BaseConstruct.h"
+#include "EnergyPack.h"
 #include "ShooterSandboxPlayerState.h"
 #include "AShooterSandboxHUD.h"
 #include "ShooterSandboxGameState.h"
@@ -26,27 +27,41 @@ AShooterSandboxGameMode::AShooterSandboxGameMode()
 	PlayerStateClass = AShooterSandboxPlayerState::StaticClass();
 }
 
+void AShooterSandboxGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	GetWorld()->GetTimerManager().SetTimer(energyPulse, this, &AShooterSandboxGameMode::Server_GiveEnergyToPlayers, 4.0f, true);
+}
+
 void AShooterSandboxGameMode::PostLogin(APlayerController * NewPlayer)
 {
-	if (NewPlayer == nullptr) {
+	if (NewPlayer == nullptr)
+	{
 		return;
 	}
 
-	if (!HasAuthority()) {
+	if (!HasAuthority())
+	{
 		return;
 	}
 
 	Super::PostLogin(NewPlayer);
 
+	AShooterSandboxCharacter* currentPlayer;
+
 	Cast<AShooterSandboxPlayerState>(NewPlayer->GetPlayerState<AShooterSandboxPlayerState>())->playerNumber = GetGameState<AShooterSandboxGameState>()->PlayerArray.Num();
 	Cast<AShooterSandboxController>(NewPlayer)->ClientPostLogin();
-	Server_RespawnPlayer(NewPlayer);
+	if (Server_RespawnPlayer(NewPlayer, currentPlayer) && currentPlayer)
+	{
+		Server_GiveEnergyPackToPlayer(currentPlayer);
+	}
 }
 
-void AShooterSandboxGameMode::Server_RespawnPlayer(APlayerController * playerController)
+bool AShooterSandboxGameMode::Server_RespawnPlayer(APlayerController* playerController, AShooterSandboxCharacter*& playerCharacter)
 {
 	if (playerController == nullptr) {
-		return;
+		return false;
 	}
 
 	if (playerController->GetPawn()) {
@@ -60,13 +75,47 @@ void AShooterSandboxGameMode::Server_RespawnPlayer(APlayerController * playerCon
 	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	APawn* spawnedActor = GetWorld()->SpawnActor<APawn>(playerCharacterToSpawn, FVector::ZeroVector, FRotator::ZeroRotator, spawnParams);
 	playerController->Possess(spawnedActor);
+
+	if (Cast<AShooterSandboxCharacter>(spawnedActor))
+	{
+		playerCharacter = Cast<AShooterSandboxCharacter>(spawnedActor);
+		return true;
+	}
+	return false;
 }
 
-void AShooterSandboxGameMode::Server_SpawnConstruct(TSubclassOf<ABaseConstruct> construct, AShooterSandboxController* playerController, FVector spawnPosition, FRotator spawnRotation)//_Implementation
+void AShooterSandboxGameMode::Server_GiveEnergyPackToPlayer(AShooterSandboxCharacter*& playerCharacter)
+{
+	FActorSpawnParameters spawnParams;
+	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	AEnergyPack* spawnedPack = GetWorld()->SpawnActor<AEnergyPack>(playerEnergyPack, FVector::ZeroVector, FRotator::ZeroRotator, spawnParams);
+	
+	spawnedPack->SetOwner(playerCharacter);
+	
+	playerCharacter->PickupEnergyPack(spawnedPack);
+}
+
+void AShooterSandboxGameMode::Server_GiveEnergyToPlayers()
+{
+	APlayerController* currentPlayerController;
+	AShooterSandboxCharacter* currentPlayerCharacter;
+	for (FConstPlayerControllerIterator iterator = GetWorld()->GetPlayerControllerIterator(); iterator; ++iterator)
+	{
+		currentPlayerController = Cast<APlayerController>(*iterator);
+		currentPlayerCharacter = Cast<AShooterSandboxCharacter>(currentPlayerController->GetCharacter());
+		if (currentPlayerCharacter)
+		{
+			currentPlayerCharacter->AddEnergy(PULSE_ENERGY_AMOUNT);
+		}
+	}
+}
+
+void AShooterSandboxGameMode::Server_SpawnConstruct(TSubclassOf<ABaseConstruct> construct, AShooterSandboxController* playerController, FVector spawnPosition, FRotator spawnRotation)
 {
 	UWorld* world = GetWorld();
 
-	if (world == nullptr || construct == nullptr || playerController == nullptr) {
+	if (world == nullptr || construct == nullptr || playerController == nullptr)
+	{
 		return;
 	}
 
@@ -80,37 +129,20 @@ void AShooterSandboxGameMode::Server_SpawnConstruct(TSubclassOf<ABaseConstruct> 
 	
 	ABaseConstruct* spawnedConstruct = world->SpawnActor<ABaseConstruct>(construct, spawnPosition, spawnRotation, spawnParams);
 
-	if (spawnedConstruct) {
+	if (spawnedConstruct)
+	{
 		spawnedConstruct->SetConstructedBy(playerController);
 		playerController->PostConstructionUpdate(construct);
 
+		Cast<AShooterSandboxCharacter>(playerController->GetCharacter())->SpendEnergy(construct.GetDefaultObject()->constructionCost);
 		Cast<AShooterSandboxPlayerState>(playerController->PlayerState)->HasConstructed(construct.GetDefaultObject()->constructionCost);
-
 		//Temp_PrintLog();
 	}
-	else {
+	else
+	{
 		playerController->ProxyForHUD_AlertMessage("Build failed. Another construct already exists there");
 	}
 }
-
-//void AShooterSandboxGameMode::Server_ControlOffensiveConstruct(class ABaseConstruct* construct, AShooterSandboxController * playerController)
-//{
-//	if (construct == nullptr)
-//	{
-//		UE_LOG(LogTemp, Warning, TEXT("construct is null"));
-//		if (playerController == nullptr)
-//		{
-//			UE_LOG(LogTemp, Warning, TEXT("playerController is null"));
-//			return;
-//		}
-//		return;
-//	}
-//	FString msg = construct->GetName() + "'s former Owner was " + construct->GetOwner()->GetName();
-//	UE_LOG(LogTemp, Warning, TEXT("%s"), *msg);
-//	construct->SetOwner(playerController);
-//	msg = construct->GetName() + "'s current Owner is " + construct->GetOwner()->GetName();
-//	UE_LOG(LogTemp, Warning, TEXT("%s"), *msg);
-//}
 
 //REMOVE THIS FUNCTION WHEN TESTING IS DONE
 void AShooterSandboxGameMode::Temp_PrintLog()

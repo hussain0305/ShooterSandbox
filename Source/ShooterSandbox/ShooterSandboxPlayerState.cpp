@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ShooterSandboxPlayerState.h"
+#include "ShooterSandboxCharacter.h"
 #include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -49,7 +50,7 @@ int AShooterSandboxPlayerState::GetKills()
 void AShooterSandboxPlayerState::HasConstructed(int cost)
 {
 	numConstructsConstructed++;
-	energy -= cost;
+	//energy -= cost;
 }
 
 int AShooterSandboxPlayerState::GetNumConstructsBuilt()
@@ -65,6 +66,16 @@ void AShooterSandboxPlayerState::HasBrokenConstruct()
 int AShooterSandboxPlayerState::GetNumConstructsBroken()
 {
 	return numConstructsBroken;
+}
+
+void AShooterSandboxPlayerState::IncrementOrDecrementEnergyBy(int amount)
+{
+	energy += amount;
+}
+
+int AShooterSandboxPlayerState::GetEnergy()
+{
+	return energy;
 }
 
 #pragma endregion

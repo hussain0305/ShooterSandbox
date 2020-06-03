@@ -76,12 +76,36 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Construction")
 	bool GetSpawnLocation(FVector &spawnLocation);
 
-
 	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Gameplay")
 	void SetOffensiveConstructInVicinity(class ABaseOffensiveConstruct* construct);
 
 	UFUNCTION(BlueprintCallable, Category = "Gameplay")
 	class ABaseOffensiveConstruct* GetOffensiveConstructInVicinity();
+
+	void EnsureComponentsFetched();
+
+	//************ Energy and Energy Pack Functions ************
+	
+	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
+	void AddEnergy(int amount);
+
+	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
+	void SpendEnergy(int amount);
+
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
+	void PickupEnergyPack(class AEnergyPack* thePack);
+
+	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
+	void PickupEnergyPackOnOwningClient(class AEnergyPack* thePack);
+
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
+	void DropEnergyPack();
+
+	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
+	void DropEnergyPackOnOwningClient();
+
+	//UFUNCTION(Category = "Energy")
+	//void OnRep_EnergyChanged();
 
 	//************ RPC Functions ************
 
@@ -106,8 +130,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class AShooterSandboxController* myController;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	class AShooterSandboxPlayerState* myPlayerState;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay")
 	class ABaseOffensiveConstruct* currentConstructInVicinity;
+
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
+	class AEnergyPack* myEnergyPack;
 
 //=#=#=#=#= FUNCTIONS =#=#=#=#=
 	

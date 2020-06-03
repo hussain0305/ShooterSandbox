@@ -50,7 +50,7 @@ public:
 	void SetHasEnergyPack(bool hasPack);
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Energy")
-	void UpdateEnergyLevel(int newEnergyLevel);
+	void UpdateEnergyLevel(int newEnergyLevel, int maxEnergyLevel);
 
 protected:
 

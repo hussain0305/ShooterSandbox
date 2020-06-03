@@ -87,10 +87,10 @@ public:
 	//************ Energy and Energy Pack Functions ************
 	
 	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
-	void AddEnergy(int amount);
+	void AddEnergy(int amount, int maxEnergy);
 
 	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
-	void SpendEnergy(int amount);
+	void SpendEnergy(int amount, int maxEnergy);
 
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
 	void PickupEnergyPack(class AEnergyPack* thePack);

@@ -12,8 +12,9 @@ class AShooterSandboxGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 public:
-	const int PULSE_ENERGY_AMOUNT = 10;
-	
+	const int PULSE_ENERGY_AMOUNT = 15;
+	const int MAX_ENERGY_AMOUNT = 500;
+
 	AShooterSandboxGameMode();
 
 	FTimerHandle energyPulse;

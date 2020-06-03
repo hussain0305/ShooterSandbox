@@ -105,7 +105,7 @@ void AShooterSandboxGameMode::Server_GiveEnergyToPlayers()
 		currentPlayerCharacter = Cast<AShooterSandboxCharacter>(currentPlayerController->GetCharacter());
 		if (currentPlayerCharacter)
 		{
-			currentPlayerCharacter->AddEnergy(PULSE_ENERGY_AMOUNT);
+			currentPlayerCharacter->AddEnergy(PULSE_ENERGY_AMOUNT, MAX_ENERGY_AMOUNT);
 		}
 	}
 }
@@ -134,7 +134,7 @@ void AShooterSandboxGameMode::Server_SpawnConstruct(TSubclassOf<ABaseConstruct> 
 		spawnedConstruct->SetConstructedBy(playerController);
 		playerController->PostConstructionUpdate(construct);
 
-		Cast<AShooterSandboxCharacter>(playerController->GetCharacter())->SpendEnergy(construct.GetDefaultObject()->constructionCost);
+		Cast<AShooterSandboxCharacter>(playerController->GetCharacter())->SpendEnergy(construct.GetDefaultObject()->constructionCost, MAX_ENERGY_AMOUNT);
 		Cast<AShooterSandboxPlayerState>(playerController->PlayerState)->HasConstructed(construct.GetDefaultObject()->constructionCost);
 		//Temp_PrintLog();
 	}

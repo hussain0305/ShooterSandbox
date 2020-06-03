@@ -303,39 +303,53 @@ bool AShooterSandboxCharacter::GetSpawnLocation(FVector &spawnLocation)
 	return false;
 }
 
-bool AShooterSandboxCharacter::AddEnergy_Validate(int amount)
+bool AShooterSandboxCharacter::AddEnergy_Validate(int amount, int maxEnergy)
 {
 	return true;
 }
 
-void AShooterSandboxCharacter::AddEnergy_Implementation(int amount)
+void AShooterSandboxCharacter::AddEnergy_Implementation(int amount, int maxEnergy)
 {
 	if (!myEnergyPack || !myPlayerState || !myController)
 	{
 		return;
 	}
 
-	myPlayerState->IncrementOrDecrementEnergyBy(amount);
+	int currentEnergy = myPlayerState->GetEnergy();
+	if (currentEnergy >= maxEnergy)
+	{
+		return;
+	}
 
-	Cast<AAShooterSandboxHUD>(myController->GetHUD())->UpdateEnergyLevel(myPlayerState->GetEnergy());
+	myPlayerState->IncrementOrDecrementEnergyBy((currentEnergy + amount > maxEnergy) ? (maxEnergy - currentEnergy) : amount);
+
+	Cast<AAShooterSandboxHUD>(myController->GetHUD())->UpdateEnergyLevel(myPlayerState->GetEnergy(), maxEnergy);
 
 	return;
 }
 
-bool AShooterSandboxCharacter::SpendEnergy_Validate(int amount)
+bool AShooterSandboxCharacter::SpendEnergy_Validate(int amount, int maxEnergy)
 {
 	return true;
 }
 
-void AShooterSandboxCharacter::SpendEnergy_Implementation(int amount)
+void AShooterSandboxCharacter::SpendEnergy_Implementation(int amount, int maxEnergy)
 {
 	if (!myEnergyPack || myPlayerState->GetEnergy() < amount)
 	{
 		return;
 	}
+
+	int currentEnergy = myPlayerState->GetEnergy();
+
+	if (currentEnergy <= 0 || currentEnergy - amount < 0)
+	{
+		return;
+	}
+
 	myPlayerState->IncrementOrDecrementEnergyBy(-amount);
 
-	Cast<AAShooterSandboxHUD>(myController->GetHUD())->UpdateEnergyLevel(myPlayerState->GetEnergy());
+	Cast<AAShooterSandboxHUD>(myController->GetHUD())->UpdateEnergyLevel(myPlayerState->GetEnergy(), maxEnergy);
 	
 	return;
 }
@@ -362,7 +376,7 @@ bool AShooterSandboxCharacter::SetOffensiveConstructInVicinity_Validate(ABaseOff
 	return true;
 }
 
-void AShooterSandboxCharacter::SetOffensiveConstructInVicinity_Implementation(ABaseOffensiveConstruct* construct)//
+void AShooterSandboxCharacter::SetOffensiveConstructInVicinity_Implementation(ABaseOffensiveConstruct* construct)
 {
 	currentConstructInVicinity = construct;
 	if (construct)

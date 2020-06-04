@@ -73,7 +73,7 @@ bool AShooterSandboxGameMode::Server_RespawnPlayer(APlayerController* playerCont
 
 	FActorSpawnParameters spawnParams;
 	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	APawn* spawnedActor = GetWorld()->SpawnActor<APawn>(playerCharacterToSpawn, FVector::ZeroVector, FRotator::ZeroRotator, spawnParams);
+	APawn* spawnedActor = GetWorld()->SpawnActor<APawn>(playerCharacterToSpawn, startPoints[FMath::RandRange(0, (startPoints.Num() - 1))]->GetActorLocation(), FRotator::ZeroRotator, spawnParams);//FVector::ZeroVector
 	playerController->Possess(spawnedActor);
 
 	if (Cast<AShooterSandboxCharacter>(spawnedActor))
@@ -140,7 +140,7 @@ void AShooterSandboxGameMode::Server_SpawnConstruct(TSubclassOf<ABaseConstruct> 
 	}
 	else
 	{
-		playerController->ProxyForHUD_AlertMessage("Build failed. Another construct already exists there");
+		playerController->ProxyForHUD_AlertMessage("Build failed. Cell is occupied");
 	}
 }
 

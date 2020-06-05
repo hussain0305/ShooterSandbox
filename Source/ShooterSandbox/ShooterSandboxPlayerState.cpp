@@ -50,7 +50,7 @@ int AShooterSandboxPlayerState::GetKills()
 void AShooterSandboxPlayerState::HasConstructed(int cost)
 {
 	numConstructsConstructed++;
-	//energy -= cost;
+	playerScore += cost;
 }
 
 int AShooterSandboxPlayerState::GetNumConstructsBuilt()
@@ -58,9 +58,15 @@ int AShooterSandboxPlayerState::GetNumConstructsBuilt()
 	return numConstructsConstructed;
 }
 
-void AShooterSandboxPlayerState::HasBrokenConstruct()
+int AShooterSandboxPlayerState::GetScore()
+{
+	return playerScore;
+}
+
+void AShooterSandboxPlayerState::HasBrokenConstruct(int healthOfConstruct)
 {
 	numConstructsBroken++;
+	playerScore += healthOfConstruct;
 }
 
 int AShooterSandboxPlayerState::GetNumConstructsBroken()

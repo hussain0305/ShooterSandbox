@@ -19,6 +19,9 @@ protected:
 
 //=#=#=#=#= VARIABLES =#=#=#=#=
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	int maxHealth;
+
 	UPROPERTY(Replicated)
 	int health;
 

@@ -19,7 +19,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-
+	class AShooterSandboxController* shooterController;
 
 public:	
 	// Called every frame
@@ -28,8 +28,21 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
 	class USphereComponent* CollisionComponent;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+	bool destroyOnImpact;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+	int damage;
+
 	UPROPERTY(VisibleAnywhere, Category = Movement)
 	class UProjectileMovementComponent* ProjectileMovementComponent;
 
 	void FireInDirection(FVector shootDirection);
+
+	void SetShooterController(class AShooterSandboxController* shooter);
+
+	class AShooterSandboxController* GetShooterController();
+
+	UFUNCTION()
+	void OnProjectileHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 };

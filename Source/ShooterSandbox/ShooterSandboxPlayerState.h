@@ -69,7 +69,10 @@ public:
 	int GetNumConstructsBuilt();
 
 	UFUNCTION(BlueprintCallable, Category = "Round Stats")
-	void HasBrokenConstruct();
+	int GetScore();
+
+	UFUNCTION(BlueprintCallable, Category = "Round Stats")
+	void HasBrokenConstruct(int healthOfConstruct);
 
 	UFUNCTION(BlueprintCallable, Category = "Round Stats")
 	int GetNumConstructsBroken();

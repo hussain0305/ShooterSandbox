@@ -14,6 +14,11 @@ class SHOOTERSANDBOX_API AShooterSandboxController : public APlayerController
 {
 	GENERATED_BODY()
 	
+protected:
+
+	virtual void BeginPlay() override;
+	virtual void SetupPlayerInputComponent();//class UInputComponent* PlayerInputComponent
+
 public:
 
 	UFUNCTION(Client, reliable, WithValidation)
@@ -24,6 +29,9 @@ public:
 	
 	UFUNCTION(Client, reliable, WithValidation, BlueprintCallable, Category = "Player HUD")
 	void ProxyForHUD_AlertMessage(const FString& message);
+
+	void OpenScorecard();
+	void CloseScorecard();
 
 	void PossessThis(class ABaseOffensiveConstruct* constructToControl);
 	void PossessThis(class AShooterSandboxCharacter* characterToControl);

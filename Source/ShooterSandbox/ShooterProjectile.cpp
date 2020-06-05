@@ -1,8 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ShooterProjectile.h"
+#include "ShooterSandboxController.h"
+#include "BaseConstruct.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AShooterProjectile::AShooterProjectile()
@@ -30,6 +33,7 @@ void AShooterProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	CollisionComponent->OnComponentHit.AddDynamic(this, &AShooterProjectile::OnProjectileHit);
 }
 
 // Called every frame
@@ -41,6 +45,33 @@ void AShooterProjectile::Tick(float DeltaTime)
 
 void AShooterProjectile::FireInDirection(FVector shootDirection)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Velocity impartdf"));
 	ProjectileMovementComponent->Velocity = shootDirection * ProjectileMovementComponent->InitialSpeed;
+}
+
+void AShooterProjectile::SetShooterController(AShooterSandboxController * shooter)
+{
+	shooterController = shooter;
+}
+
+AShooterSandboxController * AShooterProjectile::GetShooterController()
+{
+	return shooterController;
+}
+
+void AShooterProjectile::OnProjectileHit(UPrimitiveComponent * HitComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, FVector NormalImpulse, const FHitResult & Hit)
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	if (Cast<ABaseConstruct>(OtherActor))
+	{
+		Cast<ABaseConstruct>(OtherActor)->TakeDamage((float)damage, FDamageEvent(), GetShooterController(), GetInstigator());
+	}
+
+	if(destroyOnImpact)
+	{
+		Destroy(this);
+	}
 }

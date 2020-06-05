@@ -131,6 +131,7 @@ void ABaseOffensiveConstruct::StartShooting_Implementation()
 
 		if (spawnedProjectile)
 		{
+			spawnedProjectile->SetShooterController(userController);
 			spawnedProjectile->FireInDirection(barrel->GetSocketRotation(FName("Muzzle")).Vector());
 		}
 

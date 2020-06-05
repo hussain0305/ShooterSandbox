@@ -73,7 +73,9 @@ bool AShooterSandboxGameMode::Server_RespawnPlayer(APlayerController* playerCont
 
 	FActorSpawnParameters spawnParams;
 	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	APawn* spawnedActor = GetWorld()->SpawnActor<APawn>(playerCharacterToSpawn, startPoints[FMath::RandRange(0, (startPoints.Num() - 1))]->GetActorLocation(), FRotator::ZeroRotator, spawnParams);//FVector::ZeroVector
+	APawn* spawnedActor = GetWorld()->SpawnActor<APawn>(playerCharacterToSpawn,
+		startPoints.Num() == 0 ? FVector::ZeroVector : startPoints[FMath::RandRange(0, (startPoints.Num() - 1))]->GetActorLocation(),
+		FRotator::ZeroRotator, spawnParams);
 	playerController->Possess(spawnedActor);
 
 	if (Cast<AShooterSandboxCharacter>(spawnedActor))

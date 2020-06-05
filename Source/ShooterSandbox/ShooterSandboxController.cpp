@@ -9,8 +9,37 @@
 #include "AShooterSandboxHUD.h"
 #include "BaseConstruct.h"
 #include "BaseOffensiveConstruct.h"
+#include "Components/InputComponent.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
+
+void AShooterSandboxController::BeginPlay()
+{
+	SetupPlayerInputComponent();
+}
+
+void AShooterSandboxController::SetupPlayerInputComponent()//class UInputComponent* PlayerInputComponent
+{
+	Super::SetupInputComponent();
+
+	//FInputActionBinding ActionBindingOpenScorecard;
+	//ActionBindingOpenScorecard.KeyEvent = IE_Pressed;
+	//FInputActionHandlerSignature OpenScorecardHandler;
+	//OpenScorecardHandler.BindUFunction(this, FName("OpenScorecard"), true);
+	//ActionBindingOpenScorecard.ActionDelegate = OpenScorecardHandler;
+
+	//FInputActionBinding ActionBindingCloseScorecard;
+	//ActionBindingCloseScorecard.KeyEvent = IE_Released;
+	//FInputActionHandlerSignature CloseScorecardHandler;
+	//CloseScorecardHandler.BindUFunction(this, FName("OpenScorecard"), false);
+	//ActionBindingCloseScorecard.ActionDelegate = CloseScorecardHandler;
+	
+	//InputComponent->AddActionBinding(ActionBindingOpenScorecard);
+	//InputComponent->AddActionBinding(ActionBindingCloseScorecard);
+
+	InputComponent->BindAction("ShowScorecard", IE_Pressed, this, &AShooterSandboxController::OpenScorecard);
+	InputComponent->BindAction("ShowScorecard", IE_Released, this, &AShooterSandboxController::CloseScorecard);
+}
 
 bool AShooterSandboxController::ClientPostLogin_Validate() {
 	return true;
@@ -42,6 +71,16 @@ bool AShooterSandboxController::ProxyForHUD_AlertMessage_Validate(const FString&
 void AShooterSandboxController::ProxyForHUD_AlertMessage_Implementation(const FString& message)
 {
 	Cast<AAShooterSandboxHUD>(GetHUD())->ShowAlertMessage(message);
+}
+
+void AShooterSandboxController::OpenScorecard()
+{
+	Cast<AAShooterSandboxHUD>(GetHUD())->ShowScorecard(true);
+}
+
+void AShooterSandboxController::CloseScorecard()
+{
+	Cast<AAShooterSandboxHUD>(GetHUD())->ShowScorecard(false);
 }
 
 void AShooterSandboxController::PossessThis(ABaseOffensiveConstruct* constructToControl)

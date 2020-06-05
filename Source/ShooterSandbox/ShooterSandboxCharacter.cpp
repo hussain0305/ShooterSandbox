@@ -361,6 +361,12 @@ void AShooterSandboxCharacter::TryConstruct(TSubclassOf<class ABaseConstruct> co
 		return;
 	}
 
+	if (!myEnergyPack)
+	{
+		Cast<AAShooterSandboxHUD>(myController->GetHUD())->ShowNotificationMessage("Cannot construct without Energy Pack");
+		return;
+	}
+
 	FVector spawnLocation;
 	if (GetSpawnLocation(spawnLocation)) {
 		if (construct.GetDefaultObject()->constructionCost > myPlayerState->GetEnergy())
@@ -402,7 +408,7 @@ void AShooterSandboxCharacter::PickupEnergyPack_Implementation(AEnergyPack* theP
 	myEnergyPack->energyPackBody->SetSimulatePhysics(false);
 	myEnergyPack->boxCollider->SetSimulatePhysics(false);
 
-	myEnergyPack->AttachToActor(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("EnergyPackHolder"));
+	myEnergyPack->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("EnergyPackHolder"));
 }
 
 bool AShooterSandboxCharacter::PickupEnergyPackOnOwningClient_Validate(AEnergyPack* thePack)

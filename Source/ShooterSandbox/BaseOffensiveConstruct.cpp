@@ -71,7 +71,8 @@ void ABaseOffensiveConstruct::SetupPlayerInputComponent(class UInputComponent* P
 
 	PlayerInputComponent->BindAction("Use", IE_Pressed, this, &ABaseOffensiveConstruct::LeaveOffensive);
 	PlayerInputComponent->BindAction("MouseLeft", IE_Pressed, this, &ABaseOffensiveConstruct::StartShooting);
-	PlayerInputComponent->BindAction("MouseRight", IE_Pressed, this, &ABaseOffensiveConstruct::StartShooting);
+	PlayerInputComponent->BindAction("MouseLeft", IE_Released, this, &ABaseOffensiveConstruct::StopShooting);
+	PlayerInputComponent->BindAction("MouseRight", IE_Pressed, this, &ABaseOffensiveConstruct::SwitchMode);
 
 	PlayerInputComponent->BindAxis("Turn", this, &ABaseOffensiveConstruct::AddControllerYawInputTo);
 	PlayerInputComponent->BindAxis("LookUp", this, &ABaseOffensiveConstruct::AddControllerPitchInputTo);
@@ -112,36 +113,6 @@ void ABaseOffensiveConstruct::Server_AddControllerYawInputTo_Implementation(floa
 }
 
 #pragma endregion
-
-bool ABaseOffensiveConstruct::StartShooting_Validate()
-{
-	return true;
-}
-
-void ABaseOffensiveConstruct::StartShooting_Implementation()
-{
-	if (Role == ROLE_Authority && GetWorld() && projectile)
-	{
-		FActorSpawnParameters spawnParams;
-		spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
-		spawnParams.Owner = userCharacter;
-		spawnParams.Instigator = userCharacter;
-
-		AShooterProjectile* spawnedProjectile = GetWorld()->SpawnActor<AShooterProjectile>(projectile, barrel->GetSocketLocation(FName("Muzzle")),  barrel->GetSocketRotation(FName("Muzzle")), spawnParams);
-
-		if (spawnedProjectile)
-		{
-			spawnedProjectile->SetShooterController(userController);
-			spawnedProjectile->FireInDirection(barrel->GetSocketRotation(FName("Muzzle")).Vector());
-		}
-
-	}
-}
-
-void ABaseOffensiveConstruct::StopShooting()
-{
-
-}
 
 void ABaseOffensiveConstruct::OnOverlapBegan(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
@@ -188,7 +159,6 @@ void ABaseOffensiveConstruct::Multicast_ControlOffensive_Implementation(AShooter
 	userCharacter = Cast<AShooterSandboxCharacter>(occupantController->GetCharacter());
 
 	userController->PossessThis(this);
-	//userCharacter->GetFollowCamera()->AttachToComponent(muzzle, FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("CameraHolder"));
 }
 
 bool ABaseOffensiveConstruct::LeaveOffensive_Validate()
@@ -225,6 +195,21 @@ void ABaseOffensiveConstruct::Multicast_LeaveOffensive_Implementation()
 
 	userCharacter = nullptr;
 	userController = nullptr;
+
+}
+
+void ABaseOffensiveConstruct::StartShooting()
+{
+	keepFiring = true;
+}
+
+void ABaseOffensiveConstruct::StopShooting()
+{
+	keepFiring = false;
+}
+
+void ABaseOffensiveConstruct::SwitchMode()
+{
 
 }
 

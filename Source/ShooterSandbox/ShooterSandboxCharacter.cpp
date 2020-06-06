@@ -89,6 +89,10 @@ void AShooterSandboxCharacter::BeginPlay()
 
 	myController = Cast<AShooterSandboxController>(GetController());//UGameplayStatics::GetPlayerController(this, 0));//
 	myPlayerState = Cast<AShooterSandboxPlayerState>(GetPlayerState());
+	if (myController)
+	{
+		myHUD = Cast<AAShooterSandboxHUD>(myController->GetHUD());
+	}
 
 	FTimerHandle delayedFetchComponent;
 	GetWorld()->GetTimerManager().SetTimer(delayedFetchComponent, this, &AShooterSandboxCharacter::EnsureComponentsFetched, 0.5f, false);
@@ -253,7 +257,7 @@ void AShooterSandboxCharacter::MouseWheelDown()
 		return;
 	}
 
-	Cast<AAShooterSandboxHUD>(myController->GetHUD())->ScrollDownList();
+	myHUD->ScrollDownList();
 }
 
 void AShooterSandboxCharacter::MouseWheelUp()
@@ -263,7 +267,7 @@ void AShooterSandboxCharacter::MouseWheelUp()
 		return;
 	}
 
-	Cast<AAShooterSandboxHUD>(myController->GetHUD())->ScrollUpList();
+	myHUD->ScrollUpList();
 }
 
 bool AShooterSandboxCharacter::GetSpawnLocation(FVector &spawnLocation)
@@ -297,6 +301,15 @@ bool AShooterSandboxCharacter::GetSpawnLocation(FVector &spawnLocation)
 
 			return true;
 		}
+		else
+		{
+			myHUD->ShowNotificationMessage("Aim at a constructible surface to build");
+		}
+	}
+
+	else
+	{
+		myHUD->ShowNotificationMessage("Aim at a constructible surface nearby to build");
 	}
 
 	spawnLocation = FVector(1000, 1000, 1000);
@@ -323,7 +336,7 @@ void AShooterSandboxCharacter::AddEnergy_Implementation(int amount, int maxEnerg
 
 	myPlayerState->IncrementOrDecrementEnergyBy((currentEnergy + amount > maxEnergy) ? (maxEnergy - currentEnergy) : amount);
 
-	Cast<AAShooterSandboxHUD>(myController->GetHUD())->UpdateEnergyLevel(myPlayerState->GetEnergy(), maxEnergy);
+	myHUD->UpdateEnergyLevel(myPlayerState->GetEnergy(), maxEnergy);
 
 	return;
 }
@@ -349,7 +362,7 @@ void AShooterSandboxCharacter::SpendEnergy_Implementation(int amount, int maxEne
 
 	myPlayerState->IncrementOrDecrementEnergyBy(-amount);
 
-	Cast<AAShooterSandboxHUD>(myController->GetHUD())->UpdateEnergyLevel(myPlayerState->GetEnergy(), maxEnergy);
+	myHUD->UpdateEnergyLevel(myPlayerState->GetEnergy(), maxEnergy);
 	
 	return;
 }
@@ -363,7 +376,7 @@ void AShooterSandboxCharacter::TryConstruct(TSubclassOf<class ABaseConstruct> co
 
 	if (!myEnergyPack)
 	{
-		Cast<AAShooterSandboxHUD>(myController->GetHUD())->ShowNotificationMessage("Cannot construct without Energy Pack");
+		myHUD->ShowNotificationMessage("Cannot construct without Energy Pack");
 		return;
 	}
 
@@ -371,7 +384,7 @@ void AShooterSandboxCharacter::TryConstruct(TSubclassOf<class ABaseConstruct> co
 	if (GetSpawnLocation(spawnLocation)) {
 		if (construct.GetDefaultObject()->constructionCost > myPlayerState->GetEnergy())
 		{
-			Cast<AAShooterSandboxHUD>(myController->GetHUD())->ShowNotificationMessage("Not enough Energy");
+			myHUD->ShowNotificationMessage("Not enough Energy");
 			return;
 		}
 		ServerConstruct(construct, myController, spawnLocation, GetActorRotation());
@@ -387,11 +400,11 @@ void AShooterSandboxCharacter::SetOffensiveConstructInVicinity_Implementation(AB
 	currentConstructInVicinity = construct;
 	if (construct)
 	{
-		Cast<AAShooterSandboxHUD>(myController->GetHUD())->ShowActionPromptMessage("E", ("Control " + construct->constructName));
+		myHUD->ShowActionPromptMessage("E", ("Control " + construct->constructName));
 	}
 	else
 	{
-		Cast<AAShooterSandboxHUD>(myController->GetHUD())->RemoveActionPromptMessage();
+		myHUD->RemoveActionPromptMessage();
 	}
 }
 
@@ -425,7 +438,7 @@ void AShooterSandboxCharacter::PickupEnergyPackOnOwningClient_Implementation(AEn
 
 	myEnergyPack = thePack;
 
-	Cast<AAShooterSandboxHUD>(myController->GetHUD())->SetHasEnergyPack(true);
+	myHUD->SetHasEnergyPack(true);
 }
 
 bool AShooterSandboxCharacter::DropEnergyPack_Validate()
@@ -461,7 +474,7 @@ void AShooterSandboxCharacter::DropEnergyPackOnOwningClient_Implementation()
 	}
 	myEnergyPack = nullptr;
 
-	Cast<AAShooterSandboxHUD>(myController->GetHUD())->SetHasEnergyPack(false);
+	myHUD->SetHasEnergyPack(false);
 }
 
 ABaseOffensiveConstruct* AShooterSandboxCharacter::GetOffensiveConstructInVicinity()
@@ -510,13 +523,13 @@ void AShooterSandboxCharacter::AttemptControlOffensiveConstruct()
 	{
 		if (currentConstructInVicinity->GetIsBeingUsed())
 		{
-			Cast<AAShooterSandboxHUD>(myController->GetHUD())->RemoveActionPromptMessage();
+			myHUD->RemoveActionPromptMessage();
 			currentConstructInVicinity = nullptr;
-			Cast<AAShooterSandboxHUD>(myController->GetHUD())->ShowNotificationMessage("Construct already being controlled");
+			myHUD->ShowNotificationMessage("Construct already being controlled");
 			return;
 		}
 		Server_AttemptControlOffensiveConstruct(currentConstructInVicinity, myController);
-		Cast<AAShooterSandboxHUD>(myController->GetHUD())->RemoveActionPromptMessage();
+		myHUD->RemoveActionPromptMessage();
 	}
 }
 

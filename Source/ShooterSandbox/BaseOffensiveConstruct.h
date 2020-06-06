@@ -16,7 +16,7 @@ protected:
 
 //=#=#=#=#= VARIABLES =#=#=#=#=
 
-	UPROPERTY(Transient, Replicated)
+	UPROPERTY(Transient, Replicated, BlueprintReadOnly)
 	class AShooterSandboxController* userController;
 
 	UPROPERTY(Transient, Replicated)
@@ -24,6 +24,9 @@ protected:
 
 	UPROPERTY(Transient, Replicated)
 	bool isBeingUsed;
+
+	UPROPERTY(BlueprintReadWrite)
+	bool keepFiring = false;
 
 	float rotatingPartLowerRotationLimit;
 	float rotatingPartUpperRotationLimit;
@@ -70,6 +73,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class AShooterProjectile> projectile;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FVector2D pitchRecoilRange;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FVector2D yawRecoilRange;
+
 //=#=#=#=#= FUNCTIONS =#=#=#=#=
 
 	//************ Turret Rotation Functions ************
@@ -85,11 +94,14 @@ public:
 
 	//************ Other Functions ************
 
-	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Offensive Construct Controls")
+	UFUNCTION(BlueprintCallable, Category = "Offensive Construct Controls")//Server, Reliable, WithValidation, 
 	virtual void StartShooting();
 
 	UFUNCTION(BlueprintCallable, Category = "Offensive Construct Controls")
 	virtual void StopShooting();
+
+	UFUNCTION(BlueprintCallable, Category = "Offensive Construct Controls")
+	virtual void SwitchMode();
 
 	UFUNCTION(NetMulticast, Reliable, WithValidation, BlueprintCallable, Category = "Offensive Construct Controls")
 	void Multicast_ControlOffensive(class AShooterSandboxController* occupantController);

@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "Camera/CameraShake.h"
 #include "ShooterSandboxCharacter.generated.h"
 
 enum class EMovementState : uint8;
@@ -37,10 +36,10 @@ public:
 	float BaseLookUpRate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
-	TSubclassOf<UCameraShake> runCamShake;
+	TSubclassOf<class UCameraShake> runCamShake;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
-	TSubclassOf<UCameraShake> endRunCamShake;
+	TSubclassOf<class UCameraShake> endRunCamShake;
 
 //=#=#=#=#= FUNCTIONS =#=#=#=#=
 
@@ -132,6 +131,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class AShooterSandboxPlayerState* myPlayerState;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	class AAShooterSandboxHUD* myHUD;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay")
 	class ABaseOffensiveConstruct* currentConstructInVicinity;

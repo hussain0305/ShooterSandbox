@@ -25,6 +25,12 @@ enum class EMovementState : uint8 {
 	Jumping		UMETA(DisplayName = "Jumping"),
 };
 
+UENUM(BlueprintType)
+enum class ETurretFireMode : uint8 {
+	Primary			UMETA(DisplayName = "Primary"),
+	Alternate		UMETA(DisplayName = "Alternate"),
+};
+
 USTRUCT(BlueprintType)
 struct FConstructsDatabase : public FTableRowBase
 {

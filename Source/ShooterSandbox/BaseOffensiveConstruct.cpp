@@ -5,9 +5,13 @@
 #include "Camera/CameraComponent.h"
 #include "ShooterSandboxController.h"
 #include "ShooterSandboxCharacter.h"
+#include "AShooterSandboxHUD.h"
 #include "ShooterProjectile.h"
+#include "ShooterSandboxGlobal.h"
 #include "Components/SphereComponent.h"
 #include "Engine/StaticMesh.h"
+#include "Engine/World.h"
+#include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
@@ -53,7 +57,9 @@ ABaseOffensiveConstruct::ABaseOffensiveConstruct()
 void ABaseOffensiveConstruct::BeginPlay()
 {
 	Super::BeginPlay();
+
 	isBeingUsed = false;
+	currentMode = ETurretFireMode::Primary;
 
 	rotatingPartDefaultRotation = rotatingConstructPart->GetRelativeRotation();
 	barrelPartDefaultRotation = barrelFulcrum->GetRelativeRotation();
@@ -62,7 +68,6 @@ void ABaseOffensiveConstruct::BeginPlay()
 	rotatingPartUpperRotationLimit = rotatingPartDefaultRotation.Pitch + 45;
 	barrelLowerRotationLimit = barrelPartDefaultRotation.Yaw - 45;
 	barrelUpperRotationLimit = barrelPartDefaultRotation.Yaw + 45;
-
 }
 
 void ABaseOffensiveConstruct::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -191,11 +196,66 @@ void ABaseOffensiveConstruct::Multicast_LeaveOffensive_Implementation()
 	}
 
 	userController->PossessThis(userCharacter);
-	//userCharacter->ReattachCamera(userCharacter->GetFollowCamera());
+	if (Cast<AAShooterSandboxHUD>(userController->GetHUD()))
+	{
+		Cast<AAShooterSandboxHUD>(userController->GetHUD())->RemoveTurretModeSwitching();
+	}
 
 	userCharacter = nullptr;
 	userController = nullptr;
 
+	totalRecoil = FVector2D::ZeroVector;
+}
+
+bool ABaseOffensiveConstruct::PerformRecoil_Validate()
+{
+	return true;
+}
+
+void ABaseOffensiveConstruct::PerformRecoil_Implementation()
+{
+	if (currentMode == ETurretFireMode::Primary)
+	{
+		totalRecoil.X += FMath::RandRange(verticalRecoilRange.X, verticalRecoilRange.Y);
+		totalRecoil.Y += FMath::RandRange(-sidewaysRecoilRange, sidewaysRecoilRange);
+	}
+	else
+	{
+		totalRecoil.X += FMath::RandRange(verticalRecoilRange.X / 3, verticalRecoilRange.Y / 3);
+		totalRecoil.Y += FMath::RandRange(-sidewaysRecoilRange / 3, sidewaysRecoilRange / 3);
+	}
+	recoilCount = 0;
+
+	if (recoilProcess.IsValid())
+	{
+		GetWorldTimerManager().ClearTimer(recoilProcess);
+		recoilProcess.Invalidate();
+	}
+	GetWorld()->GetTimerManager().SetTimer(recoilProcess, this, &ABaseOffensiveConstruct::RecoilRoutine, 0.016f, true);
+}
+
+void ABaseOffensiveConstruct::RecoilRoutine()
+{
+	if (recoilCount < shootRecoilFrames)
+	{
+		AddControllerPitchInputTo(totalRecoil.X / shootRecoilFrames);
+		AddControllerYawInputTo(totalRecoil.Y / shootRecoilFrames);
+	}
+
+	else if (recoilCount < (shootRecoilFrames + recoilRecoveryFrames))
+	{
+		AddControllerPitchInputTo(-totalRecoil.X / recoilRecoveryFrames);
+		AddControllerYawInputTo(-totalRecoil.Y / recoilRecoveryFrames);
+	}
+
+	else
+	{
+		GetWorldTimerManager().ClearTimer(recoilProcess);
+		recoilProcess.Invalidate();
+		totalRecoil = FVector2D::ZeroVector;
+	}
+
+	recoilCount++;
 }
 
 void ABaseOffensiveConstruct::StartShooting()
@@ -210,7 +270,12 @@ void ABaseOffensiveConstruct::StopShooting()
 
 void ABaseOffensiveConstruct::SwitchMode()
 {
-
+	currentMode = (currentMode == ETurretFireMode::Primary) ? ETurretFireMode::Alternate : ETurretFireMode::Primary;
+	
+	if(userController && userController->GetHUD())
+	{
+		Cast<AAShooterSandboxHUD>(userController->GetHUD())->SetTurretMode((currentMode == ETurretFireMode::Primary) ? 0 : 1);
+	}
 }
 
 void ABaseOffensiveConstruct::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const

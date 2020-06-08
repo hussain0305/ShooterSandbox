@@ -22,8 +22,14 @@ public:
 
 	virtual void BeginPlay() override;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	class UTurretModeSwitchScreen* turretModeSwitchingScreen;
+
 	UFUNCTION(BlueprintCallable)
 	void ToggleConstructionMenu();
+
+	UFUNCTION(BlueprintCallable)
+	void SetTurretMode(int modeNum);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "UI Messages")
 	void ShowAlertMessage(const FString& message);
@@ -54,6 +60,12 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Gameplay")
 	void ShowScorecard(bool shouldOpen);
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Turret Gun Controls")
+	void ShowTurretModeSwitching(TSubclassOf<class UTurretModeSwitchScreen> switchScreen, int mode);
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Turret Gun Controls")
+	void RemoveTurretModeSwitching();
 
 protected:
 

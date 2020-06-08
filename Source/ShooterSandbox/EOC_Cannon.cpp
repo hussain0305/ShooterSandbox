@@ -5,17 +5,36 @@
 #include "ShooterSandboxCharacter.h"
 #include "ShooterSandboxController.h"
 #include "ShooterProjectile.h"
+#include "ShooterSandboxGlobal.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 #include "Camera/CameraShake.h"
+#include "Camera/CameraComponent.h"
 
 void AEOC_Cannon::StartShooting()
 {	
 	Super::StartShooting();
 
-	SpawnProjectile();
+	//askPerformRecoil = true;
+	burstShotsCompleted = 0;
+
+	if (currentMode == ETurretFireMode::Primary)
+	{
+		SpawnProjectile();
+	}
+
+	else
+	{
+		if(burstShotTimer.IsValid())
+		{
+			GetWorldTimerManager().ClearTimer(burstShotTimer);
+			burstShotTimer.Invalidate();
+		}
+		SpawnProjectile();
+		GetWorld()->GetTimerManager().SetTimer(burstShotTimer, this, &AEOC_Cannon::BurstFire, 0.15f, true);
+	}
 }
 
 void AEOC_Cannon::StopShooting()
@@ -27,6 +46,20 @@ void AEOC_Cannon::StopShooting()
 void AEOC_Cannon::SwitchMode()
 {
 	Super::SwitchMode();
+}
+
+void AEOC_Cannon::BurstFire()
+{
+	burstShotsCompleted++;
+	if (burstShotsCompleted >= NUM_BURST_SHOTS)
+	{
+		GetWorldTimerManager().ClearTimer(burstShotTimer);
+		burstShotTimer.Invalidate();
+	}
+	else
+	{
+		SpawnProjectile();
+	}
 }
 
 bool AEOC_Cannon::SpawnProjectile_Validate()
@@ -43,18 +76,16 @@ void AEOC_Cannon::SpawnProjectile_Implementation()
 		spawnParams.Owner = userCharacter;
 		spawnParams.Instigator = userCharacter;
 
-		AShooterProjectile* spawnedProjectile = GetWorld()->SpawnActor<AShooterProjectile>(projectile, barrel->GetSocketLocation(FName("Muzzle")), barrel->GetSocketRotation(FName("Muzzle")), spawnParams);
+		AShooterProjectile* spawnedProjectile = GetWorld()->SpawnActor<AShooterProjectile>(projectile, barrel->GetSocketLocation(FName("Muzzle")), TurretCamera->GetComponentRotation(), spawnParams);
 
 		if (spawnedProjectile)
 		{
 			spawnedProjectile->SetShooterController(userController);
-			spawnedProjectile->FireInDirection(barrel->GetSocketRotation(FName("Muzzle")).Vector());
-
-			AddControllerPitchInputTo(FMath::RandRange(pitchRecoilRange.X, pitchRecoilRange.Y));
-			AddControllerYawInputTo(FMath::RandRange(yawRecoilRange.X, yawRecoilRange.Y));
-
+			//spawnedProjectile->FireInDirection(barrel->GetSocketRotation(FName("Muzzle")).Vector()); TurretCamera->GetComponentRotation()
+			spawnedProjectile->FireInDirection(TurretCamera->GetComponentRotation().Vector());
+			
+			PerformRecoil();
 			userController->ClientPlayCameraShake(shotShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
 		}
-
 	}
 }

@@ -6,6 +6,7 @@
 //#include "CanvasItem.h"
 //#include "UObject/ConstructorHelpers.h"
 #include "Blueprint/UserWidget.h"
+#include "TurretModeSwitchScreen.h"
 
 
 AAShooterSandboxHUD::AAShooterSandboxHUD()
@@ -91,6 +92,13 @@ void AAShooterSandboxHUD::ToggleConstructionMenu()
 				constructionMenu->bIsFocusable = false;
 			}
 		}
+	}
+}
+
+void AAShooterSandboxHUD::SetTurretMode(int modeNum)
+{
+	if (turretModeSwitchingScreen) {
+		turretModeSwitchingScreen->SetFireMode(modeNum);
 	}
 }
 

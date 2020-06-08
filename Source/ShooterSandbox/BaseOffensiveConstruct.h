@@ -6,6 +6,7 @@
 #include "BaseConstruct.h"
 #include "BaseOffensiveConstruct.generated.h"
 
+enum class ETurretFireMode : uint8;
 
 UCLASS()
 class SHOOTERSANDBOX_API ABaseOffensiveConstruct : public ABaseConstruct
@@ -28,10 +29,23 @@ protected:
 	UPROPERTY(BlueprintReadWrite)
 	bool keepFiring = false;
 
-	float rotatingPartLowerRotationLimit;
-	float rotatingPartUpperRotationLimit;
-	float barrelLowerRotationLimit;
-	float barrelUpperRotationLimit;
+	//************ Recoil Related ************
+	
+	int recoilCount;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	int shootRecoilFrames = 45;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	int recoilRecoveryFrames = 60;
+
+	FTimerHandle recoilProcess;
+
+	UFUNCTION(Client, Unreliable, WithValidation)
+	void PerformRecoil();
+
+	void RecoilRoutine();
+
 
 public:
 	ABaseOffensiveConstruct();
@@ -40,12 +54,22 @@ public:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	//=#=#=#=#= VARIABLES =#=#=#=#=
+//=#=#=#=#= VARIABLES =#=#=#=#=
+
+	UPROPERTY(BlueprintReadWrite)
+	FVector2D totalRecoil;
 
 	FRotator rotatingPartDefaultRotation;
 	FRotator barrelPartDefaultRotation;
 
+	ETurretFireMode currentMode;
+
 	//************ Physical Setup ************
+
+	float rotatingPartLowerRotationLimit;
+	float rotatingPartUpperRotationLimit;
+	float barrelLowerRotationLimit;
+	float barrelUpperRotationLimit;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* TurretCamera;
@@ -74,11 +98,14 @@ public:
 	TSubclassOf<class AShooterProjectile> projectile;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	FVector2D pitchRecoilRange;
+	FVector2D verticalRecoilRange;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	FVector2D yawRecoilRange;
+	float sidewaysRecoilRange;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<class UTurretModeSwitchScreen> switchScreen;
+	
 //=#=#=#=#= FUNCTIONS =#=#=#=#=
 
 	//************ Turret Rotation Functions ************

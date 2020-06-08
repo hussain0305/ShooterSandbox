@@ -530,6 +530,8 @@ void AShooterSandboxCharacter::AttemptControlOffensiveConstruct()
 		}
 		Server_AttemptControlOffensiveConstruct(currentConstructInVicinity, myController);
 		myHUD->RemoveActionPromptMessage();
+		myHUD->ShowTurretModeSwitching(currentConstructInVicinity->switchScreen,
+			currentConstructInVicinity->currentMode == ETurretFireMode::Primary ? 0 : 1);
 	}
 }
 

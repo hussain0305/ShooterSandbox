@@ -160,7 +160,8 @@ void AShooterSandboxCharacter::MonitorMovementState()
 		{
 			if (currentMovementState == EMovementState::Running)
 			{
-				ToggleRunOff();
+				//ToggleRunOff();
+				ToggleRunCamShake(false);
 			}
 			SetCurrentEMovementState(EMovementState::Stationary);
 		}
@@ -171,11 +172,12 @@ void AShooterSandboxCharacter::MonitorMovementState()
 		//Walking
 		if (currentMovementState != EMovementState::Walking)
 		{
-			SetCurrentEMovementState(EMovementState::Walking);
 			if (currentMovementState == EMovementState::Running)
 			{
-				ToggleRunOff();
+				//ToggleRunOff();
+				ToggleRunCamShake(false);
 			}
+			SetCurrentEMovementState(EMovementState::Walking);
 		}
 
 	}
@@ -183,6 +185,7 @@ void AShooterSandboxCharacter::MonitorMovementState()
 	else {
 		if (currentMovementState != EMovementState::Running)
 		{
+			ToggleRunCamShake(true);
 			SetCurrentEMovementState(EMovementState::Running);
 		}
 	}
@@ -219,7 +222,6 @@ void AShooterSandboxCharacter::ToggleRunOn()
 
 	GetCharacterMovement()->MaxWalkSpeed = RUN_MULTIPLIER * walkSpeed;
 	Server_ToggleRun(RUN_MULTIPLIER * walkSpeed);
-	myController->ClientPlayCameraShake(runCamShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
 }
 
 void AShooterSandboxCharacter::ToggleRunOff()
@@ -233,8 +235,24 @@ void AShooterSandboxCharacter::ToggleRunOff()
 
 	GetCharacterMovement()->MaxWalkSpeed = walkSpeed;
 	Server_ToggleRun(walkSpeed);
-	myController->ClientStopCameraShake(runCamShake);
-	myController->ClientPlayCameraShake(endRunCamShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
+}
+
+void AShooterSandboxCharacter::ToggleRunCamShake(bool startShake)
+{
+	if(!myController)
+	{
+		return;
+	}
+
+	if (startShake)
+	{
+		myController->ClientPlayCameraShake(runCamShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
+	}
+	else
+	{
+		myController->ClientStopCameraShake(runCamShake);
+		//myController->ClientPlayCameraShake(endRunCamShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
+	}
 }
 
 bool AShooterSandboxCharacter::Server_ToggleRun_Validate(float newSpeed)

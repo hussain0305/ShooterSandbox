@@ -15,6 +15,10 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
+void ABaseOffensiveConstruct::CheckBeforeLeaving()
+{
+}
+
 ABaseOffensiveConstruct::ABaseOffensiveConstruct()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -74,7 +78,7 @@ void ABaseOffensiveConstruct::SetupPlayerInputComponent(class UInputComponent* P
 {
 	check(PlayerInputComponent);
 
-	PlayerInputComponent->BindAction("Use", IE_Pressed, this, &ABaseOffensiveConstruct::LeaveOffensive);
+	PlayerInputComponent->BindAction("Use", IE_Pressed, this, &ABaseOffensiveConstruct::Server_LeaveOffensive);
 	PlayerInputComponent->BindAction("MouseLeft", IE_Pressed, this, &ABaseOffensiveConstruct::StartShooting);
 	PlayerInputComponent->BindAction("MouseLeft", IE_Released, this, &ABaseOffensiveConstruct::StopShooting);
 	PlayerInputComponent->BindAction("MouseRight", IE_Pressed, this, &ABaseOffensiveConstruct::SwitchMode);
@@ -166,16 +170,18 @@ void ABaseOffensiveConstruct::Multicast_ControlOffensive_Implementation(AShooter
 	userController->PossessThis(this);
 }
 
-bool ABaseOffensiveConstruct::LeaveOffensive_Validate()
+bool ABaseOffensiveConstruct::Server_LeaveOffensive_Validate()
 {
 	return true;
 }
 
-void ABaseOffensiveConstruct::LeaveOffensive_Implementation()
+void ABaseOffensiveConstruct::Server_LeaveOffensive_Implementation()
 {
 	if (userController == nullptr) {
 		return;
 	}
+
+	CheckBeforeLeaving();
 
 	Multicast_LeaveOffensive();
 }
@@ -207,57 +213,6 @@ void ABaseOffensiveConstruct::Multicast_LeaveOffensive_Implementation()
 	totalRecoil = FVector2D::ZeroVector;
 }
 
-bool ABaseOffensiveConstruct::PerformRecoil_Validate()
-{
-	return true;
-}
-
-void ABaseOffensiveConstruct::PerformRecoil_Implementation()
-{
-	if (currentMode == ETurretFireMode::Primary)
-	{
-		totalRecoil.X += FMath::RandRange(verticalRecoilRange.X, verticalRecoilRange.Y);
-		totalRecoil.Y += FMath::RandRange(-sidewaysRecoilRange, sidewaysRecoilRange);
-	}
-	else
-	{
-		totalRecoil.X += FMath::RandRange(verticalRecoilRange.X / 3, verticalRecoilRange.Y / 3);
-		totalRecoil.Y += FMath::RandRange(-sidewaysRecoilRange / 3, sidewaysRecoilRange / 3);
-	}
-	recoilCount = 0;
-
-	if (recoilProcess.IsValid())
-	{
-		GetWorldTimerManager().ClearTimer(recoilProcess);
-		recoilProcess.Invalidate();
-	}
-	GetWorld()->GetTimerManager().SetTimer(recoilProcess, this, &ABaseOffensiveConstruct::RecoilRoutine, 0.016f, true);
-}
-
-void ABaseOffensiveConstruct::RecoilRoutine()
-{
-	if (recoilCount < shootRecoilFrames)
-	{
-		AddControllerPitchInputTo(totalRecoil.X / shootRecoilFrames);
-		AddControllerYawInputTo(totalRecoil.Y / shootRecoilFrames);
-	}
-
-	else if (recoilCount < (shootRecoilFrames + recoilRecoveryFrames))
-	{
-		AddControllerPitchInputTo(-totalRecoil.X / recoilRecoveryFrames);
-		AddControllerYawInputTo(-totalRecoil.Y / recoilRecoveryFrames);
-	}
-
-	else
-	{
-		GetWorldTimerManager().ClearTimer(recoilProcess);
-		recoilProcess.Invalidate();
-		totalRecoil = FVector2D::ZeroVector;
-	}
-
-	recoilCount++;
-}
-
 void ABaseOffensiveConstruct::StartShooting()
 {
 	keepFiring = true;
@@ -286,3 +241,59 @@ void ABaseOffensiveConstruct::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 	DOREPLIFETIME(ABaseOffensiveConstruct, userCharacter);
 	DOREPLIFETIME(ABaseOffensiveConstruct, isBeingUsed);
 }
+
+
+//=#=#=#=#= CONSIDER IF THIS CAN BE INTEGRATED BACK IN THE BASE CLASS =#=#=#=#=
+
+//bool ABaseOffensiveConstruct::PerformRecoil_Validate()
+//{
+//	return true;
+//}
+//
+//void ABaseOffensiveConstruct::PerformRecoil_Implementation()
+//{
+//	if (currentMode == ETurretFireMode::Primary)
+//	{
+//		totalRecoil.X += FMath::RandRange(verticalRecoilRange.X, verticalRecoilRange.Y);
+//		totalRecoil.Y += FMath::RandRange(-sidewaysRecoilRange, sidewaysRecoilRange);
+//		totalRecoil.X = totalRecoil.X > 5 ? 5 : totalRecoil.X;
+//		totalRecoil.Y = totalRecoil.Y > 5 ? 5 : totalRecoil.Y;
+//	}
+//	else
+//	{
+//		totalRecoil.X += FMath::RandRange(verticalRecoilRange.X / 3, verticalRecoilRange.Y / 3);
+//		totalRecoil.Y += FMath::RandRange(-sidewaysRecoilRange / 3, sidewaysRecoilRange / 3);
+//	}
+//	recoilCount = 0;
+//
+//	if (recoilProcess.IsValid())
+//	{
+//		GetWorldTimerManager().ClearTimer(recoilProcess);
+//		recoilProcess.Invalidate();
+//	}
+//	GetWorld()->GetTimerManager().SetTimer(recoilProcess, this, &ABaseOffensiveConstruct::RecoilRoutine, 0.016f, true);
+//}
+
+//void ABaseOffensiveConstruct::RecoilRoutine()
+//{
+//	if (recoilCount < shootRecoilFrames)
+//	{
+//		AddControllerPitchInputTo(totalRecoil.X / shootRecoilFrames);
+//		AddControllerYawInputTo(totalRecoil.Y / shootRecoilFrames);
+//	}
+//
+//	else if (recoilCount < (shootRecoilFrames + recoilRecoveryFrames))
+//	{
+//		AddControllerPitchInputTo(-totalRecoil.X / recoilRecoveryFrames);
+//		AddControllerYawInputTo(-totalRecoil.Y / recoilRecoveryFrames);
+//	}
+//
+//	else
+//	{
+//		GetWorldTimerManager().ClearTimer(recoilProcess);
+//		recoilProcess.Invalidate();
+//		totalRecoil = FVector2D::ZeroVector;
+//	}
+//
+//	recoilCount++;
+//}

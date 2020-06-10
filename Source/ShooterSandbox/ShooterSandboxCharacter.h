@@ -154,6 +154,7 @@ protected:
 	void ToggleCrouch();
 	void ToggleRunOn();
 	void ToggleRunOff();
+	void ToggleRunCamShake(bool startShake);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_ToggleRun(float newSpeed);

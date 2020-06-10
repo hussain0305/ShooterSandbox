@@ -43,10 +43,10 @@ void AEOC_Cannon::StopShooting()
 
 }
 
-void AEOC_Cannon::SwitchMode()
-{
-	Super::SwitchMode();
-}
+//void AEOC_Cannon::SwitchMode()
+//{
+//	Super::SwitchMode();
+//}
 
 void AEOC_Cannon::BurstFire()
 {
@@ -75,17 +75,79 @@ void AEOC_Cannon::SpawnProjectile_Implementation()
 		spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
 		spawnParams.Owner = userCharacter;
 		spawnParams.Instigator = userCharacter;
-
+		UKismetSystemLibrary::PrintString(this, (TEXT("SpawnProjectile")));
 		AShooterProjectile* spawnedProjectile = GetWorld()->SpawnActor<AShooterProjectile>(projectile, barrel->GetSocketLocation(FName("Muzzle")), TurretCamera->GetComponentRotation(), spawnParams);
 
 		if (spawnedProjectile)
 		{
 			spawnedProjectile->SetShooterController(userController);
 			//spawnedProjectile->FireInDirection(barrel->GetSocketRotation(FName("Muzzle")).Vector()); TurretCamera->GetComponentRotation()
-			spawnedProjectile->FireInDirection(TurretCamera->GetComponentRotation().Vector());
+			spawnedProjectile->FireInDirection(TurretCamera->GetForwardVector());//>GetComponentRotation().Vector());
 			
 			PerformRecoil();
 			userController->ClientPlayCameraShake(shotShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
 		}
+	}
+}
+
+bool AEOC_Cannon::PerformRecoil_Validate()
+{
+	return true;
+}
+
+void AEOC_Cannon::PerformRecoil_Implementation()
+{
+	if (currentMode == ETurretFireMode::Primary)
+	{
+		totalRecoil.X += FMath::RandRange(verticalRecoilRange.X, verticalRecoilRange.Y);
+		totalRecoil.Y += FMath::RandRange(-sidewaysRecoilRange, sidewaysRecoilRange);
+	}
+	else
+	{
+		totalRecoil.X += FMath::RandRange(verticalRecoilRange.X / 3, verticalRecoilRange.Y / 3);
+		totalRecoil.Y += FMath::RandRange(-sidewaysRecoilRange / 3, sidewaysRecoilRange / 3);
+	}
+	recoilCount = 0;
+
+	if (recoilProcess.IsValid())
+	{
+		GetWorldTimerManager().ClearTimer(recoilProcess);
+		recoilProcess.Invalidate();
+	}
+	GetWorld()->GetTimerManager().SetTimer(recoilProcess, this, &AEOC_Cannon::RecoilRoutine, 0.016f, true);
+}
+
+void AEOC_Cannon::RecoilRoutine()
+{
+	if (recoilCount < shootRecoilFrames)
+	{
+		AddControllerPitchInputTo(totalRecoil.X / shootRecoilFrames);
+		AddControllerYawInputTo(totalRecoil.Y / shootRecoilFrames);
+	}
+
+	else if (recoilCount < (shootRecoilFrames + recoilRecoveryFrames))
+	{
+		AddControllerPitchInputTo(-totalRecoil.X / recoilRecoveryFrames);
+		AddControllerYawInputTo(-totalRecoil.Y / recoilRecoveryFrames);
+	}
+
+	else
+	{
+		GetWorldTimerManager().ClearTimer(recoilProcess);
+		recoilProcess.Invalidate();
+		totalRecoil = FVector2D::ZeroVector;
+	}
+
+	recoilCount++;
+}
+
+void AEOC_Cannon::CheckBeforeLeaving()
+{
+	Super::CheckBeforeLeaving();
+
+	if (burstShotTimer.IsValid())
+	{
+		GetWorldTimerManager().ClearTimer(burstShotTimer);
+		burstShotTimer.Invalidate();
 	}
 }

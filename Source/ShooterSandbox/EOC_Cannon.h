@@ -11,6 +11,10 @@ class SHOOTERSANDBOX_API AEOC_Cannon : public ABaseOffensiveConstruct
 {
 	GENERATED_BODY()
 	
+protected:
+
+	virtual void CheckBeforeLeaving() override;
+
 public:
 	const int NUM_BURST_SHOTS = 3;
 
@@ -25,10 +29,14 @@ public:
 
 	virtual void StopShooting() override;
 
-	virtual void SwitchMode() override;
-
 	void BurstFire();
 
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Offensive Construct Controls")
 	void SpawnProjectile();
+
+	UFUNCTION(Client, Unreliable, WithValidation)
+	void PerformRecoil();
+
+	void RecoilRoutine();
+
 };

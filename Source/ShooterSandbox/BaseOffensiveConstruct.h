@@ -33,19 +33,18 @@ protected:
 	
 	int recoilCount;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Recoil")
 	int shootRecoilFrames = 45;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Recoil")
 	int recoilRecoveryFrames = 60;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Recoil")
+	float maxRecoilPerFrame = 10;
 
 	FTimerHandle recoilProcess;
 
-	UFUNCTION(Client, Unreliable, WithValidation)
-	void PerformRecoil();
-
-	void RecoilRoutine();
-
+	virtual void CheckBeforeLeaving();
 
 public:
 	ABaseOffensiveConstruct();
@@ -97,10 +96,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class AShooterProjectile> projectile;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (ToolTip = "The function of this value depends on the construct's specific recoil implementation. Name might not be self-explanatory."))
 	FVector2D verticalRecoilRange;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (ToolTip = "The function of this value depends on the construct's specific recoil implementation. Name might not be self-explanatory."))
 	float sidewaysRecoilRange;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
@@ -134,7 +133,7 @@ public:
 	void Multicast_ControlOffensive(class AShooterSandboxController* occupantController);
 
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Offensive Construct Controls")
-	void LeaveOffensive();
+	void Server_LeaveOffensive();
 
 	UFUNCTION(NetMulticast, Reliable, WithValidation, BlueprintCallable, Category = "Offensive Construct Controls")
 	void Multicast_LeaveOffensive();
@@ -147,3 +146,10 @@ public:
 
 	FORCEINLINE bool GetIsBeingUsed() const { return isBeingUsed; }
 };
+
+//=#=#=#=#= CONSIDER IF THIS CAN BE INTEGRATED BACK IN THE BASE CLASS =#=#=#=#=
+
+	//UFUNCTION(Client, Unreliable, WithValidation)
+	//void PerformRecoil();
+
+	//void RecoilRoutine();

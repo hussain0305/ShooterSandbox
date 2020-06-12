@@ -15,10 +15,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
-void ABaseOffensiveConstruct::CheckBeforeLeaving()
-{
-}
-
 ABaseOffensiveConstruct::ABaseOffensiveConstruct()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -231,6 +227,11 @@ void ABaseOffensiveConstruct::SwitchMode()
 	{
 		Cast<AAShooterSandboxHUD>(userController->GetHUD())->SetTurretMode((currentMode == ETurretFireMode::Primary) ? 0 : 1);
 	}
+}
+
+void ABaseOffensiveConstruct::CheckBeforeLeaving()
+{
+
 }
 
 void ABaseOffensiveConstruct::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const

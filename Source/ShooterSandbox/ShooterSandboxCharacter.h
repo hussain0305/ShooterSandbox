@@ -25,9 +25,14 @@ public:
 
 	const float BUILD_DISTANCE = 1500;
 
+	class ABaseWeapon* weaponCurrentlyHeld;
+
 //=#=#=#=#= VARIABLES =#=#=#=#=
 
 	FTimerHandle movementStateMonitoring;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	bool bHasWeapon = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	float BaseTurnRate;
@@ -103,6 +108,13 @@ public:
 	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
 	void DropEnergyPackOnOwningClient();
 
+	UFUNCTION(NetMulticast, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
+	void PickupOrDropWeapon(class ABaseWeapon* theWeapon);
+
+	void StartWeaponFire();
+	void StopWeaponFire();
+	void WeaponAltMode();
+
 	//UFUNCTION(Category = "Energy")
 	//void OnRep_EnergyChanged();
 
@@ -163,5 +175,5 @@ public:
 
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE class AShooterSandboxController* GetMyController() const { return myController; }
 };
-

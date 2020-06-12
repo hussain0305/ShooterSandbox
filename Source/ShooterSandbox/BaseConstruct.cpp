@@ -29,9 +29,11 @@ void ABaseConstruct::Tick(float DeltaTime)
 
 float ABaseConstruct::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
 {
-	if (!HasAuthority() || DamageCauser == nullptr || EventInstigator == nullptr) {
+	if (!HasAuthority() || DamageCauser == nullptr || EventInstigator == nullptr)
+	{
 		return health;
 	}
+
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
 	health -= DamageAmount;

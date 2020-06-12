@@ -66,8 +66,7 @@ void AEOC_MachineGun::SpawnProjectile_Implementation()
 		if (spawnedProjectile)
 		{
 			spawnedProjectile->SetShooterController(userController);
-			//spawnedProjectile->FireInDirection(barrel->GetSocketRotation(FName("Muzzle")).Vector()); TurretCamera->GetComponentRotation()
-			spawnedProjectile->FireInDirection(TurretCamera->GetForwardVector() + recoilOffset);//->GetComponentRotation().Vector());
+			spawnedProjectile->FireInDirection(TurretCamera->GetForwardVector() + recoilOffset);
 
 			userController->ClientPlayCameraShake(shotShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
 		}

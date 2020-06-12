@@ -7,6 +7,7 @@
 #include "ConstructibleSurface.h"
 #include "BaseConstruct.h"
 #include "BaseOffensiveConstruct.h"
+#include "BaseWeapon.h"
 #include "EnergyPack.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
@@ -25,13 +26,14 @@ AShooterSandboxCharacter::AShooterSandboxCharacter()
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
 	SetReplicates(true);
-	SetReplicatingMovement(true);
+	//SetReplicatingMovement(true);
+	SetReplicateMovement(true);
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = true;
 	bUseControllerRotationRoll = false;
 
-	GetCharacterMovement()->bOrientRotationToMovement = true;
+	//GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f);
 	GetCharacterMovement()->JumpZVelocity = 600.f;
 	GetCharacterMovement()->AirControl = 0.2f;
@@ -71,6 +73,10 @@ void AShooterSandboxCharacter::SetupPlayerInputComponent(class UInputComponent* 
 	PlayerInputComponent->BindAction("MouseWheelDown", IE_Pressed, this, &AShooterSandboxCharacter::MouseWheelDown);
 	PlayerInputComponent->BindAction("MouseWheelUp", IE_Pressed, this, &AShooterSandboxCharacter::MouseWheelUp);
 
+	PlayerInputComponent->BindAction("MouseLeft", IE_Pressed, this, &AShooterSandboxCharacter::StartWeaponFire);
+	PlayerInputComponent->BindAction("MouseLeft", IE_Released, this, &AShooterSandboxCharacter::StopWeaponFire);
+	PlayerInputComponent->BindAction("MouseRight", IE_Pressed, this, &AShooterSandboxCharacter::WeaponAltMode);
+
 	PlayerInputComponent->BindAction("Use", IE_Pressed, this, &AShooterSandboxCharacter::AttemptControlOffensiveConstruct);
 	PlayerInputComponent->BindAction("TestData", IE_Pressed, this, &AShooterSandboxCharacter::PrintTestData);
 
@@ -87,15 +93,8 @@ void AShooterSandboxCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	myController = Cast<AShooterSandboxController>(GetController());//UGameplayStatics::GetPlayerController(this, 0));//
-	myPlayerState = Cast<AShooterSandboxPlayerState>(GetPlayerState());
-	if (myController)
-	{
-		myHUD = Cast<AAShooterSandboxHUD>(myController->GetHUD());
-	}
-
 	FTimerHandle delayedFetchComponent;
-	GetWorld()->GetTimerManager().SetTimer(delayedFetchComponent, this, &AShooterSandboxCharacter::EnsureComponentsFetched, 0.5f, false);
+	GetWorld()->GetTimerManager().SetTimer(delayedFetchComponent, this, &AShooterSandboxCharacter::EnsureComponentsFetched, 1.0f, false);
 	
 	currentMovementState = EMovementState::Stationary;
 	GetWorld()->GetTimerManager().SetTimer(movementStateMonitoring, this, &AShooterSandboxCharacter::MonitorMovementState, 0.25f, true);
@@ -148,51 +147,32 @@ void AShooterSandboxCharacter::MonitorMovementState()
 {
 	if (GetCharacterMovement()->IsFalling())
 	{
-		if (currentMovementState != EMovementState::Jumping)
-		{
-			SetCurrentEMovementState(EMovementState::Jumping);
-		}
+		SetCurrentEMovementState(EMovementState::Jumping);
 	}
 	else if (GetCharacterMovement()->Velocity.Size() < 10.0f)
 	{
-		//Stationary
-		if (currentMovementState != EMovementState::Stationary)
-		{
-			if (currentMovementState == EMovementState::Running)
-			{
-				//ToggleRunOff();
-				ToggleRunCamShake(false);
-			}
-			SetCurrentEMovementState(EMovementState::Stationary);
-		}
+		SetCurrentEMovementState(EMovementState::Stationary);
 	}
-
 	else if (GetCharacterMovement()->Velocity.Size() < (walkSpeed + 10.0f))
 	{
-		//Walking
-		if (currentMovementState != EMovementState::Walking)
-		{
-			if (currentMovementState == EMovementState::Running)
-			{
-				//ToggleRunOff();
-				ToggleRunCamShake(false);
-			}
-			SetCurrentEMovementState(EMovementState::Walking);
-		}
-
+		SetCurrentEMovementState(EMovementState::Walking);
 	}
-
-	else {
-		if (currentMovementState != EMovementState::Running)
-		{
-			ToggleRunCamShake(true);
-			SetCurrentEMovementState(EMovementState::Running);
-		}
+	else
+	{
+		SetCurrentEMovementState(EMovementState::Running);
 	}
 }
 
 void AShooterSandboxCharacter::SetCurrentEMovementState(EMovementState newState)
 {
+	if (currentMovementState == EMovementState::Running && newState != EMovementState::Running)
+	{
+		ToggleRunCamShake(false);
+	}
+	else if (currentMovementState != EMovementState::Running && newState == EMovementState::Running)
+	{
+		ToggleRunCamShake(true);
+	}
 	currentMovementState = newState;
 }
 
@@ -213,7 +193,7 @@ void AShooterSandboxCharacter::ToggleCrouch()
 
 void AShooterSandboxCharacter::ToggleRunOn()
 {
-	//Only continue if player isn't already running
+	//Only continue if player isn't already running and doesn't have ADS
 	if (bIsRunning) {
 		return;
 	}
@@ -251,7 +231,6 @@ void AShooterSandboxCharacter::ToggleRunCamShake(bool startShake)
 	else
 	{
 		myController->ClientStopCameraShake(runCamShake);
-		//myController->ClientPlayCameraShake(endRunCamShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
 	}
 }
 
@@ -343,6 +322,16 @@ void AShooterSandboxCharacter::AddEnergy_Implementation(int amount, int maxEnerg
 {
 	if (!myEnergyPack || !myPlayerState || !myController)
 	{
+		if (!myEnergyPack) {
+			UKismetSystemLibrary::PrintString(this, (TEXT("No Energy Pack")));
+		}
+		if (!myPlayerState) {
+			UKismetSystemLibrary::PrintString(this, (TEXT("No myPlayerState")));
+		}
+		if (!myController) {
+			UKismetSystemLibrary::PrintString(this, (TEXT("No myController")));
+		}
+
 		return;
 	}
 
@@ -503,7 +492,15 @@ ABaseOffensiveConstruct* AShooterSandboxCharacter::GetOffensiveConstructInVicini
 void AShooterSandboxCharacter::EnsureComponentsFetched()
 {
 	myController = Cast<AShooterSandboxController>(GetController());
-	myPlayerState = Cast<AShooterSandboxPlayerState>(GetPlayerState());
+	if (myController)
+	{
+		myPlayerState = Cast<AShooterSandboxPlayerState>(myController->PlayerState);
+		myHUD = Cast<AAShooterSandboxHUD>(myController->GetHUD());
+	}
+	if (!myPlayerState)
+	{
+		myPlayerState = Cast<AShooterSandboxPlayerState>(GetPlayerState());
+	}
 }
 
 void AShooterSandboxCharacter::ToggleConstructionMenu()
@@ -534,6 +531,63 @@ void AShooterSandboxCharacter::ServerConstruct_Implementation(TSubclassOf<ABaseC
 //{
 //	UKismetSystemLibrary::PrintString(this, (TEXT("Energy CHangfed")));
 //}
+
+bool AShooterSandboxCharacter::PickupOrDropWeapon_Validate(ABaseWeapon* theWeapon)
+{
+	return true;
+}
+
+void AShooterSandboxCharacter::PickupOrDropWeapon_Implementation(ABaseWeapon* theWeapon)
+{
+
+	if (theWeapon) {
+		weaponCurrentlyHeld = theWeapon;
+		weaponCurrentlyHeld->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("WeaponHolder"));
+		bHasWeapon = true;
+	}
+
+	else
+	{
+		//when will a player drop weapons?
+		//1. they can consume its remaining energy
+		//2. or they can run out of energy/ammo in the gun
+		//no "dropping" weapons
+		//in both cases, weapon will be destroyed on server, do NOT destroy here
+
+		weaponCurrentlyHeld = nullptr;
+		bHasWeapon = false;
+	}
+}
+
+void AShooterSandboxCharacter::StartWeaponFire()
+{
+	if (!weaponCurrentlyHeld)
+	{
+		return;
+	}
+
+	weaponCurrentlyHeld->StartShooting();
+}
+
+void AShooterSandboxCharacter::StopWeaponFire()
+{
+	if (!weaponCurrentlyHeld)
+	{
+		return;
+	}
+
+	weaponCurrentlyHeld->StopShooting();
+}
+
+void AShooterSandboxCharacter::WeaponAltMode()
+{
+	if (!weaponCurrentlyHeld)
+	{
+		return;
+	}
+
+	weaponCurrentlyHeld->AlternateFire();
+}
 
 void AShooterSandboxCharacter::AttemptControlOffensiveConstruct()
 {
@@ -581,6 +635,4 @@ void AShooterSandboxCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProper
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AShooterSandboxCharacter, myEnergyPack);
-
-	//DOREPLIFETIME_CONDITION(AShooterSandboxCharacter, energy, COND_OwnerOnly);
 }

@@ -3,6 +3,7 @@
 #include "ShooterSandboxGameMode.h"
 #include "ShooterSandboxCharacter.h"
 #include "BaseConstruct.h"
+#include "PickupSpawnArea.h"
 #include "EnergyPack.h"
 #include "ShooterSandboxPlayerState.h"
 #include "AShooterSandboxHUD.h"
@@ -32,9 +33,10 @@ void AShooterSandboxGameMode::BeginPlay()
 	Super::BeginPlay();
 
 	GetWorld()->GetTimerManager().SetTimer(energyPulse, this, &AShooterSandboxGameMode::Server_GiveEnergyToPlayers, 4.0f, true);
+	GetWorld()->GetTimerManager().SetTimer(weaponSpawnRoutine, this, &AShooterSandboxGameMode::SpawnNewPickup, pickupInterval, true);
 }
 
-void AShooterSandboxGameMode::PostLogin(APlayerController * NewPlayer)
+void AShooterSandboxGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	if (NewPlayer == nullptr)
 	{
@@ -58,6 +60,18 @@ void AShooterSandboxGameMode::PostLogin(APlayerController * NewPlayer)
 	}
 }
 
+void AShooterSandboxGameMode::SpawnNewPickup()
+{
+	TArray<AActor*> pickupSpots;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APickupSpawnArea::StaticClass(), pickupSpots);
+
+	if(pickupSpots.Num() > 0 && Cast<APickupSpawnArea>(pickupSpots[0]))
+	{
+		Cast<APickupSpawnArea>(pickupSpots[0])->SpawnNewPickup(allWeaponPickups[0]);//FMath::RandRange(0, allWeaponPickups.Num() - 1)
+	}
+
+}
+
 bool AShooterSandboxGameMode::Server_RespawnPlayer(APlayerController* playerController, AShooterSandboxCharacter*& playerCharacter)
 {
 	if (playerController == nullptr) {
@@ -73,6 +87,7 @@ bool AShooterSandboxGameMode::Server_RespawnPlayer(APlayerController* playerCont
 
 	FActorSpawnParameters spawnParams;
 	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
 	APawn* spawnedActor = GetWorld()->SpawnActor<APawn>(playerCharacterToSpawn,
 		startPoints.Num() == 0 ? FVector::ZeroVector : startPoints[FMath::RandRange(0, (startPoints.Num() - 1))]->GetActorLocation(),
 		FRotator::ZeroRotator, spawnParams);

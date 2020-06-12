@@ -18,6 +18,7 @@ public:
 	AShooterSandboxGameMode();
 
 	FTimerHandle energyPulse;
+	FTimerHandle weaponSpawnRoutine;
 
 	void BeginPlay() override;
 
@@ -30,6 +31,14 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
 	TSubclassOf<class AEnergyPack> playerEnergyPack;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pickups")
+	TArray<TSubclassOf<class ABaseWeaponPickup>> allWeaponPickups;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pickups")
+	float pickupInterval = 5;
+
+	void SpawnNewPickup();
 
 	bool Server_RespawnPlayer(APlayerController* playerController, AShooterSandboxCharacter*& playerCharacter);
 	

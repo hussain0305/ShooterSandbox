@@ -29,7 +29,7 @@ void AEOC_MachineGun::StartShooting()
 	}
 
 	GetWorld()->GetTimerManager().SetTimer(machineGunShot, this, &AEOC_MachineGun::SpawnProjectile, 0.2f, true);
-	GetWorld()->GetTimerManager().SetTimer(recoilProcess, this, &AEOC_MachineGun::PerformRecoil, 0.1f, true);
+	GetWorld()->GetTimerManager().SetTimer(recoilProcess, this, &AEOC_MachineGun::PerformRecoil, 0.016f, true);
 }
 
 void AEOC_MachineGun::StopShooting()

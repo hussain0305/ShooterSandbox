@@ -5,6 +5,7 @@
 //#include "TextureResource.h"
 //#include "CanvasItem.h"
 //#include "UObject/ConstructorHelpers.h"
+#include "ShooterSandboxGlobal.h"
 #include "Blueprint/UserWidget.h"
 #include "TurretModeSwitchScreen.h"
 
@@ -45,53 +46,88 @@ void AAShooterSandboxHUD::BeginPlay()
 
 	constructMenuOpen = false;
 
+	SetupHUD();
+}
+
+void AAShooterSandboxHUD::SetupHUD()
+{
 	if (HUDWidgetClass != nullptr)
 	{
-		CurrentWidget = CreateWidget<UUserWidget>(GetWorld(), HUDWidgetClass);
+		mainHUDWidget = CreateWidget<UUserWidget>(GetWorld(), HUDWidgetClass);
 
-		if (CurrentWidget)
+		if (mainHUDWidget)
 		{
-			CurrentWidget->AddToViewport();
+			mainHUDWidget->AddToViewport();
 		}
 	}
 
-	if (constructionMenuWidget != nullptr) 
+	if (constructionMenuSurfaceWidget != nullptr)
 	{
-		constructionMenu = CreateWidget<UUserWidget>(GetWorld(), constructionMenuWidget);
+		constructionMenuSurface = CreateWidget<UUserWidget>(GetWorld(), constructionMenuSurfaceWidget);
+	}
+
+	if (constructionMenuWallWidget != nullptr)
+	{
+		constructionMenuWall = CreateWidget<UUserWidget>(GetWorld(), constructionMenuWallWidget);
 	}
 }
 
 void AAShooterSandboxHUD::ToggleConstructionMenu()
 {
+	if (!currentConstructionMenu)
+	{
+		return;
+	}
+
 	constructMenuOpen = !constructMenuOpen;
 
 	if (constructMenuOpen) {
 
-		if (constructionMenu)
+		if (currentConstructionMenu)
 		{
-			constructionMenu->AddToViewport();
-			BP_SwitchConstructionMode(false);
+			currentConstructionMenu->AddToViewport();
+			BP_SetConstructionScreen(false);
 			APlayerController* playerController = GetOwningPlayerController();
 			if (playerController) {
 				playerController->SetInputMode(FInputModeGameAndUI());
 				playerController->bShowMouseCursor = true;
-				constructionMenu->bIsFocusable = true;
+				currentConstructionMenu->bIsFocusable = true;
 			}
 		}
 	}
 
 	else {
-		if (constructionMenu)
+		if (currentConstructionMenu)
 		{
-			constructionMenu->RemoveFromParent();
-			BP_SwitchConstructionMode(true);
+			currentConstructionMenu->RemoveFromParent();
+			BP_SetConstructionScreen(true);
 			APlayerController* playerController = GetOwningPlayerController();
 			if (playerController) {
 				playerController->SetInputMode(FInputModeGameOnly());
 				playerController->bShowMouseCursor = false;
-				constructionMenu->bIsFocusable = false;
+				currentConstructionMenu->bIsFocusable = false;
 			}
 		}
+	}
+}
+
+void AAShooterSandboxHUD::SetConstructionMode(EConstructionMode currentMode)
+{
+	bool reopenMenuAfter = false;
+	if (constructMenuOpen)
+	{
+		ToggleConstructionMenu();
+		reopenMenuAfter = true;
+	}
+
+	currentConstructionMode = currentMode;
+	currentConstructionMenu = currentMode == EConstructionMode::Surface ? constructionMenuSurface : constructionMenuWall;
+
+	BP_SetConstructionMode(currentMode == EConstructionMode::Surface ? 0 : 1);
+
+	if (reopenMenuAfter)
+	{
+		ToggleConstructionMenu();
 	}
 }
 

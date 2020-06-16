@@ -138,6 +138,7 @@ void AShooterSandboxGameMode::Server_SpawnConstruct(TSubclassOf<ABaseConstruct> 
 
 	//Raise the construct up slightly so it doesn't collide with the building floor
 	spawnPosition += construct.GetDefaultObject()->GetActorUpVector() * 1;
+	spawnRotation = construct.GetDefaultObject()->isGridAligned ? FRotator::ZeroRotator : spawnRotation;
 
 	FActorSpawnParameters spawnParams; 
 	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;

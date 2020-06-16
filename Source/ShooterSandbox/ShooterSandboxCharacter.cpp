@@ -78,6 +78,8 @@ void AShooterSandboxCharacter::SetupPlayerInputComponent(class UInputComponent* 
 	PlayerInputComponent->BindAction("MouseRight", IE_Pressed, this, &AShooterSandboxCharacter::WeaponAltMode);
 
 	PlayerInputComponent->BindAction("Use", IE_Pressed, this, &AShooterSandboxCharacter::AttemptControlOffensiveConstruct);
+	PlayerInputComponent->BindAction("SwitchConstructionMode", IE_Pressed, this, &AShooterSandboxCharacter::SwitchConstructionMode);
+
 	PlayerInputComponent->BindAction("TestData", IE_Pressed, this, &AShooterSandboxCharacter::PrintTestData);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AShooterSandboxCharacter::MoveForward);
@@ -92,12 +94,39 @@ void AShooterSandboxCharacter::SetupPlayerInputComponent(class UInputComponent* 
 void AShooterSandboxCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	FTimerHandle delayedFetchComponent;
-	GetWorld()->GetTimerManager().SetTimer(delayedFetchComponent, this, &AShooterSandboxCharacter::EnsureComponentsFetched, 1.0f, false);
 	
+	currentConstructionMode = EConstructionMode::Surface;
+
 	currentMovementState = EMovementState::Stationary;
 	GetWorld()->GetTimerManager().SetTimer(movementStateMonitoring, this, &AShooterSandboxCharacter::MonitorMovementState, 0.25f, true);
+
+	FTimerHandle fetchComponents;
+	GetWorld()->GetTimerManager().SetTimer(fetchComponents, this, &AShooterSandboxCharacter::FetchPersistentComponents, 0.5f, false);
+}
+
+void AShooterSandboxCharacter::OnRep_PlayerState()
+{
+	myController = Cast<AShooterSandboxController>(GetController());
+	myPlayerState = Cast<AShooterSandboxPlayerState>(GetPlayerState());
+	if (myController)
+	{
+		myHUD = Cast<AAShooterSandboxHUD>(myController->GetHUD());
+	}
+}
+
+//The need for this function can be eliminated if there's a way to trigger OnRep_PlayerState on server
+void AShooterSandboxCharacter::FetchPersistentComponents()
+{
+	myController = Cast<AShooterSandboxController>(GetController());
+	myPlayerState = Cast<AShooterSandboxPlayerState>(GetPlayerState());
+	if (myController)
+	{
+		myHUD = Cast<AAShooterSandboxHUD>(myController->GetHUD());
+	}
+	if (myHUD)
+	{
+		myHUD->SetConstructionMode(currentConstructionMode);
+	}
 }
 
 #pragma region Movement Related
@@ -489,18 +518,10 @@ ABaseOffensiveConstruct* AShooterSandboxCharacter::GetOffensiveConstructInVicini
 	return currentConstructInVicinity;
 }
 
-void AShooterSandboxCharacter::EnsureComponentsFetched()
+void AShooterSandboxCharacter::SwitchConstructionMode()
 {
-	myController = Cast<AShooterSandboxController>(GetController());
-	if (myController)
-	{
-		myPlayerState = Cast<AShooterSandboxPlayerState>(myController->PlayerState);
-		myHUD = Cast<AAShooterSandboxHUD>(myController->GetHUD());
-	}
-	if (!myPlayerState)
-	{
-		myPlayerState = Cast<AShooterSandboxPlayerState>(GetPlayerState());
-	}
+	currentConstructionMode = currentConstructionMode == EConstructionMode::Surface ? EConstructionMode::Wall : EConstructionMode::Surface;
+	myHUD->SetConstructionMode(currentConstructionMode);
 }
 
 void AShooterSandboxCharacter::ToggleConstructionMenu()

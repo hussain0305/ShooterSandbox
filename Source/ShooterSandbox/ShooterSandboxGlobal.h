@@ -22,13 +22,19 @@ enum class EMovementState : uint8 {
 	Stationary	UMETA(DisplayName = "Stationary"),
 	Walking		UMETA(DisplayName = "Walking"),
 	Running		UMETA(DisplayName = "Running"),
-	Jumping		UMETA(DisplayName = "Jumping"),
+	Jumping		UMETA(DisplayName = "Jumping")
 };
 
 UENUM(BlueprintType)
 enum class ETurretFireMode : uint8 {
 	Primary			UMETA(DisplayName = "Primary"),
-	Alternate		UMETA(DisplayName = "Alternate"),
+	Alternate		UMETA(DisplayName = "Alternate")
+};
+
+UENUM(BlueprintType)
+enum class EConstructionMode : uint8 {
+	Surface			UMETA(DisplayName = "Surface"),
+	Wall			UMETA(DisplayName = "Wall")
 };
 
 USTRUCT(BlueprintType)

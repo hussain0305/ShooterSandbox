@@ -6,9 +6,8 @@
 #include "GameFramework/HUD.h"
 #include "AShooterSandboxHUD.generated.h"
 
-/**
- * 
- */
+enum class EConstructionMode : uint8;
+
 UCLASS()
 class SHOOTERSANDBOX_API AAShooterSandboxHUD : public AHUD
 {
@@ -22,11 +21,29 @@ public:
 
 	virtual void BeginPlay() override;
 
+	void SetupHUD();
+
+	EConstructionMode currentConstructionMode;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	class UUserWidget* mainHUDWidget;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	class UUserWidget* constructionMenuSurface;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	class UUserWidget* constructionMenuWall;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	class UUserWidget* currentConstructionMenu;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class UTurretModeSwitchScreen* turretModeSwitchingScreen;
 
 	UFUNCTION(BlueprintCallable)
 	void ToggleConstructionMenu();
+
+	void SetConstructionMode(EConstructionMode currentMode);
 
 	UFUNCTION(BlueprintCallable)
 	void SetTurretMode(int modeNum);
@@ -50,7 +67,10 @@ public:
 	void ScrollUpList();
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Construction")
-	void BP_SwitchConstructionMode(bool isOnQuickConstruction);
+	void BP_SetConstructionScreen(bool isOnQuickConstruction);
+	
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Construction")
+	void BP_SetConstructionMode(int modeNum);
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Energy")
 	void SetHasEnergyPack(bool hasPack);
@@ -76,15 +96,12 @@ private:
 	/** Crosshair asset pointer */
 	class UTexture2D* CrosshairTex;
 
-	UPROPERTY(EditAnywhere, Category = "Health")
+	UPROPERTY(EditAnywhere, Category = "PlayerWidgets")
 	TSubclassOf<class UUserWidget> HUDWidgetClass;
 
-	UPROPERTY(EditAnywhere, Category = "Health")
-	TSubclassOf<class UUserWidget> constructionMenuWidget;
+	UPROPERTY(EditAnywhere, Category = "ConstructionMenu")
+	TSubclassOf<class UUserWidget> constructionMenuSurfaceWidget;
 
-	UPROPERTY(EditAnywhere, Category = "Health")
-	class UUserWidget* CurrentWidget;
-
-	UPROPERTY(EditAnywhere, Category = "Health")
-	class UUserWidget* constructionMenu;
+	UPROPERTY(EditAnywhere, Category = "ConstructionMenu")
+	TSubclassOf<class UUserWidget> constructionMenuWallWidget;
 };

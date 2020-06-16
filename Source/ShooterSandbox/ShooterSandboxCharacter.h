@@ -7,6 +7,7 @@
 #include "ShooterSandboxCharacter.generated.h"
 
 enum class EMovementState : uint8;
+enum class EConstructionMode : uint8;
 
 UCLASS(config=Game)
 class AShooterSandboxCharacter : public ACharacter
@@ -29,8 +30,10 @@ public:
 
 //=#=#=#=#= VARIABLES =#=#=#=#=
 
+	EConstructionMode currentConstructionMode;
+
 	FTimerHandle movementStateMonitoring;
-	
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	bool bHasWeapon = false;
 
@@ -49,6 +52,10 @@ public:
 //=#=#=#=#= FUNCTIONS =#=#=#=#=
 
 	virtual void BeginPlay() override;
+
+	void OnRep_PlayerState() override;
+
+	void FetchPersistentComponents();
 
 	//************ Movement State Functions ************
 
@@ -86,7 +93,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Gameplay")
 	class ABaseOffensiveConstruct* GetOffensiveConstructInVicinity();
 
-	void EnsureComponentsFetched();
+	UFUNCTION(BlueprintCallable, Category = "Construction")
+	void SwitchConstructionMode();
 
 	//************ Energy and Energy Pack Functions ************
 	

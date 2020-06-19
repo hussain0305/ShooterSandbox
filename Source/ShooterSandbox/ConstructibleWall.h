@@ -4,20 +4,22 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "ConstructibleSurface.generated.h"
+#include "ConstructibleWall.generated.h"
 
 UCLASS()
-class SHOOTERSANDBOX_API AConstructibleSurface : public AActor
+class SHOOTERSANDBOX_API AConstructibleWall : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AConstructibleSurface();
+	AConstructibleWall();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Construction Grid")
 	float gridSizeInUnits;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Construction Grid")
+	float gridBuildPadding;
 
 protected:
 	// Called when the game starts or when spawned

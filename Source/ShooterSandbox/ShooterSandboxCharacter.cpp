@@ -5,6 +5,7 @@
 #include "ShooterSandboxGameMode.h"
 #include "ShooterSandboxGlobal.h"
 #include "ConstructibleSurface.h"
+#include "ConstructibleWall.h"
 #include "BaseConstruct.h"
 #include "BaseOffensiveConstruct.h"
 #include "BaseWeapon.h"
@@ -296,49 +297,113 @@ void AShooterSandboxCharacter::MouseWheelUp()
 	myHUD->ScrollUpList();
 }
 
-bool AShooterSandboxCharacter::GetSpawnLocation(FVector &spawnLocation)
+bool AShooterSandboxCharacter::GetSpawnLocationAndRotation(FVector &spawnLocation, FRotator &spawnRotation)
 {
 	if (!GetWorld())
 	{
 		return false;
 	}
 
-	FCollisionQueryParams traceParams;
-	traceParams.AddIgnoredActor(this);
+	if (currentConstructionMode == EConstructionMode::Surface)
+	{
+		FCollisionQueryParams traceParams;
+		traceParams.AddIgnoredActor(this);
 
-	FHitResult hit;
-	
-	if (GetWorld()->LineTraceSingleByObjectType(hit, FollowCamera->GetComponentLocation(),
-		(FollowCamera->GetComponentLocation() + (FollowCamera->GetForwardVector() * BUILD_DISTANCE)),
-		ECC_GameTraceChannel1, traceParams)){
+		FHitResult hit;
 
-		if (Cast<AConstructibleSurface>(hit.Actor))
-		{
-			spawnLocation = hit.ImpactPoint;
+		if (GetWorld()->LineTraceSingleByObjectType(hit, FollowCamera->GetComponentLocation(),
+			(FollowCamera->GetComponentLocation() + (FollowCamera->GetForwardVector() * BUILD_DISTANCE)),
+			ECC_GameTraceChannel1, traceParams)) {
 
-			float gridSize = Cast<AConstructibleSurface>(hit.Actor)->gridSizeInUnits;
-			int gridNoX = spawnLocation.X / gridSize;
-			int gridNoY = spawnLocation.Y / gridSize;
+			if (Cast<AConstructibleSurface>(hit.Actor))
+			{
+				spawnLocation = hit.ImpactPoint;
 
-			float gridAlignedX = (gridNoX * gridSize) + (spawnLocation.X < 0 ? -gridSize / 2 : gridSize / 2);
-			float gridAlignedY = (gridNoY * gridSize) + (spawnLocation.Y < 0 ? -gridSize / 2 : gridSize / 2);
+				float gridSize = Cast<AConstructibleSurface>(hit.Actor)->gridSizeInUnits;
+				int gridNoX = spawnLocation.X / gridSize;
+				int gridNoY = spawnLocation.Y / gridSize;
 
-			spawnLocation = FVector(gridAlignedX, gridAlignedY, spawnLocation.Z);
+				float gridAlignedX = (gridNoX * gridSize) + (spawnLocation.X < 0 ? -gridSize / 2 : gridSize / 2);
+				float gridAlignedY = (gridNoY * gridSize) + (spawnLocation.Y < 0 ? -gridSize / 2 : gridSize / 2);
 
-			return true;
+				spawnLocation = FVector(gridAlignedX, gridAlignedY, spawnLocation.Z);
+				spawnRotation = GetActorRotation();
+
+				return true;
+			}
+			else
+			{
+				myHUD->ShowNotificationMessage("Aim at a constructible floor to build");
+			}
 		}
+
 		else
 		{
-			myHUD->ShowNotificationMessage("Aim at a constructible surface to build");
+			myHUD->ShowNotificationMessage("Aim at a constructible floor nearby to build");
 		}
+
 	}
 
-	else
+	else //if construction mode == wall
 	{
-		myHUD->ShowNotificationMessage("Aim at a constructible surface nearby to build");
+		FCollisionQueryParams traceParams;
+		traceParams.AddIgnoredActor(this);
+
+		FHitResult hit;
+
+		if (GetWorld()->LineTraceSingleByObjectType(hit, FollowCamera->GetComponentLocation(),
+			(FollowCamera->GetComponentLocation() + (FollowCamera->GetForwardVector() * BUILD_DISTANCE)),
+			ECC_GameTraceChannel7, traceParams)) {
+
+			if (Cast<AConstructibleWall>(hit.Actor))
+			{
+				spawnLocation = hit.ImpactPoint;
+
+				float gridSize = Cast<AConstructibleWall>(hit.Actor)->gridSizeInUnits;
+				float padding = Cast<AConstructibleWall>(hit.Actor)->gridBuildPadding;
+
+				//if HitNormal has X=1, positioning will be along X
+				//if HitNormal has Y=1, positioning will be along Y
+
+				int gridNoZ = spawnLocation.Z / gridSize;
+				float gridAlignedZ = (gridNoZ * gridSize) + (spawnLocation.Z < 0 ? -gridSize / 2 : gridSize / 2);
+
+				int gridNoXY;
+				float gridAlignedXY;
+
+				if (hit.ImpactNormal.Y == 1 || hit.ImpactNormal.Y == -1)
+				{
+					gridNoXY = spawnLocation.X / gridSize;
+					gridAlignedXY = (gridNoXY * gridSize) + (spawnLocation.X < 0 ? -gridSize / 2 : gridSize / 2);
+					spawnLocation = FVector(gridAlignedXY, spawnLocation.Y - (hit.ImpactNormal.Y * padding), gridAlignedZ);
+				}
+				else
+				{
+					gridNoXY = spawnLocation.Y / gridSize;
+					gridAlignedXY = (gridNoXY * gridSize) + (spawnLocation.Y < 0 ? -gridSize / 2 : gridSize / 2);
+					spawnLocation = FVector(spawnLocation.X - (hit.ImpactNormal.X * padding), gridAlignedXY, gridAlignedZ);
+				}
+
+				spawnRotation = hit.ImpactNormal.Rotation();
+
+				return true;
+			}
+			else
+			{
+				myHUD->ShowNotificationMessage("Aim at a constructible wall to build");
+			}
+		}
+
+		else
+		{
+			myHUD->ShowNotificationMessage("Aim at a constructible wall nearby to build");
+		}
+
 	}
 
-	spawnLocation = FVector(1000, 1000, 1000);
+	spawnLocation = FVector::ZeroVector;
+	spawnRotation = FRotator::ZeroRotator;
+
 	return false;
 }
 
@@ -351,15 +416,15 @@ void AShooterSandboxCharacter::AddEnergy_Implementation(int amount, int maxEnerg
 {
 	if (!myEnergyPack || !myPlayerState || !myController)
 	{
-		if (!myEnergyPack) {
-			UKismetSystemLibrary::PrintString(this, (TEXT("No Energy Pack")));
-		}
-		if (!myPlayerState) {
-			UKismetSystemLibrary::PrintString(this, (TEXT("No myPlayerState")));
-		}
-		if (!myController) {
-			UKismetSystemLibrary::PrintString(this, (TEXT("No myController")));
-		}
+		//if (!myEnergyPack) {
+		//	UKismetSystemLibrary::PrintString(this, (TEXT("No Energy Pack")));
+		//}
+		//if (!myPlayerState) {
+		//	UKismetSystemLibrary::PrintString(this, (TEXT("No myPlayerState")));
+		//}
+		//if (!myController) {
+		//	UKismetSystemLibrary::PrintString(this, (TEXT("No myController")));
+		//}
 
 		return;
 	}
@@ -417,13 +482,14 @@ void AShooterSandboxCharacter::TryConstruct(TSubclassOf<class ABaseConstruct> co
 	}
 
 	FVector spawnLocation;
-	if (GetSpawnLocation(spawnLocation)) {
+	FRotator spawnRotation;
+	if (GetSpawnLocationAndRotation(spawnLocation, spawnRotation)) {
 		if (construct.GetDefaultObject()->constructionCost > myPlayerState->GetEnergy())
 		{
 			myHUD->ShowNotificationMessage("Not enough Energy");
 			return;
 		}
-		ServerConstruct(construct, myController, spawnLocation, GetActorRotation());
+		ServerConstruct(construct, myController, spawnLocation, spawnRotation);
 	}
 }
 

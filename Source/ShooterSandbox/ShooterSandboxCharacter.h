@@ -85,7 +85,7 @@ public:
 	//************ Other Functions ************
 
 	UFUNCTION(BlueprintCallable, Category = "Construction")
-	bool GetSpawnLocation(FVector &spawnLocation);
+	bool GetSpawnLocationAndRotation(FVector &spawnLocation, FRotator &spawnRotation);
 
 	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Gameplay")
 	void SetOffensiveConstructInVicinity(class ABaseOffensiveConstruct* construct);

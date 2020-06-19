@@ -81,6 +81,12 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Gameplay")
 	void ShowScorecard(bool shouldOpen);
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Gameplay")
+	void WeaponAmmoScreen(bool show);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Gameplay")
+	void UpdateWeaponAmmo(int currentEnergy, int maxEnergy);
+
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Turret Gun Controls")
 	void ShowTurretModeSwitching(TSubclassOf<class UTurretModeSwitchScreen> switchScreen, int mode);
 

@@ -619,18 +619,18 @@ void AShooterSandboxCharacter::ServerConstruct_Implementation(TSubclassOf<ABaseC
 //	UKismetSystemLibrary::PrintString(this, (TEXT("Energy CHangfed")));
 //}
 
-bool AShooterSandboxCharacter::PickupOrDropWeapon_Validate(ABaseWeapon* theWeapon)
+bool AShooterSandboxCharacter::Multicast_PickupOrDropWeapon_Validate(ABaseWeapon* theWeapon)
 {
 	return true;
 }
 
-void AShooterSandboxCharacter::PickupOrDropWeapon_Implementation(ABaseWeapon* theWeapon)
+void AShooterSandboxCharacter::Multicast_PickupOrDropWeapon_Implementation(ABaseWeapon* theWeapon)
 {
 
 	if (theWeapon) {
 		weaponCurrentlyHeld = theWeapon;
 		weaponCurrentlyHeld->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("WeaponHolder"));
-		bHasWeapon = true;
+		bHasWeapon = true;	
 	}
 
 	else
@@ -641,9 +641,43 @@ void AShooterSandboxCharacter::PickupOrDropWeapon_Implementation(ABaseWeapon* th
 		//no "dropping" weapons
 		//in both cases, weapon will be destroyed on server, do NOT destroy here
 
+		weaponCurrentlyHeld->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		//weaponCurrentlyHeld->DestroyWeapon();
 		weaponCurrentlyHeld = nullptr;
 		bHasWeapon = false;
 	}
+}
+
+bool AShooterSandboxCharacter::Client_PickupOrDropWeapon_Validate(bool hasPickedUp)
+{
+	return true;
+}
+
+void AShooterSandboxCharacter::Client_PickupOrDropWeapon_Implementation(bool hasPickedUp)
+{
+
+	if (hasPickedUp)
+	{
+		if (weaponCurrentlyHeld) {
+			myHUD->WeaponAmmoScreen(true);
+			myHUD->UpdateWeaponAmmo(weaponCurrentlyHeld->currentClipSize, weaponCurrentlyHeld->clipSize);
+		}
+	}
+
+	else
+	{
+		myHUD->WeaponAmmoScreen(false);
+	}
+}
+
+bool AShooterSandboxCharacter::Client_UpdateWeaponAmmo_Validate(int max, int current)
+{
+	return true;
+}
+
+void AShooterSandboxCharacter::Client_UpdateWeaponAmmo_Implementation(int max, int current)
+{
+	myHUD->UpdateWeaponAmmo(current, max);
 }
 
 void AShooterSandboxCharacter::StartWeaponFire()

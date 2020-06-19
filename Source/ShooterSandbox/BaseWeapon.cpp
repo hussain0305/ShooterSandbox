@@ -28,6 +28,7 @@ void ABaseWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	currentClipSize = clipSize;
 }
 
 void ABaseWeapon::StartShooting()
@@ -42,6 +43,18 @@ void ABaseWeapon::AlternateFire()
 {
 }
 
+bool ABaseWeapon::SpendAmmo()
+{
+	currentClipSize--;
+
+	if (currentClipSize >= 0)
+	{
+		return true;
+	}
+	return false;
+}
+
+
 //bool ABaseWeapon::WasPickedUpBy_Validate(AShooterSandboxCharacter * pickerCharacter)
 //{
 //	return true;
@@ -54,9 +67,20 @@ void ABaseWeapon::WasPickedUpBy(AShooterSandboxCharacter * pickerCharacter)//_Im
 	referenceCam = Cast<AShooterSandboxCharacter>(pickerCharacter)->GetFollowCamera();
 }
 
-void ABaseWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const
+bool ABaseWeapon::DestroyWeapon_Validate()
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(ABaseWeapon, energyAmount);
+	return true;
 }
+
+void ABaseWeapon::DestroyWeapon_Implementation()
+{
+	Destroy();
+}
+
+
+//void ABaseWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const
+//{
+//	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+//
+//	DOREPLIFETIME(ABaseWeapon, currentEnergy);
+//}

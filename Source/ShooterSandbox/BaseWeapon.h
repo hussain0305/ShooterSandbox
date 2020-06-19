@@ -27,11 +27,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class AShooterProjectile> projectile;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int energyPerShot;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int clipSize;
+
+	int currentClipSize;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	class UCameraComponent* referenceCam;
-
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
-	int energyAmount;
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon Controls")//Server, Reliable, WithValidation, 
 	virtual void StartShooting();
@@ -41,6 +46,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon Controls")
 	virtual void AlternateFire();
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon Controls")
+	bool SpendAmmo();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void DestroyWeapon();
 
 	//UFUNCTION(NetMulticast, Reliable, WithValidation, BlueprintCallable, Category = "Weapon Controls")
 	void WasPickedUpBy(class AShooterSandboxCharacter* pickerCharacter);

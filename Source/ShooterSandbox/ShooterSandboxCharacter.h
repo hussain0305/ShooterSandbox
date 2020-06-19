@@ -117,7 +117,13 @@ public:
 	void DropEnergyPackOnOwningClient();
 
 	UFUNCTION(NetMulticast, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
-	void PickupOrDropWeapon(class ABaseWeapon* theWeapon);
+	void Multicast_PickupOrDropWeapon(class ABaseWeapon* theWeapon);
+
+	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
+	void Client_PickupOrDropWeapon(bool hasPickedUp);
+
+	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
+	void Client_UpdateWeaponAmmo(int max, int current);
 
 	void StartWeaponFire();
 	void StopWeaponFire();

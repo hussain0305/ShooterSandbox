@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ShooterSandboxPlayerState.h"
+#include "ShooterSandboxController.h"
 #include "ShooterSandboxCharacter.h"
 #include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
@@ -77,11 +78,42 @@ int AShooterSandboxPlayerState::GetNumConstructsBroken()
 void AShooterSandboxPlayerState::IncrementOrDecrementEnergyBy(int amount)
 {
 	energy += amount;
+
+	if (Role == ROLE_Authority)
+	{
+		OnRep_EnergyChanged();
+	}
 }
 
 int AShooterSandboxPlayerState::GetEnergy()
 {
 	return energy;
+}
+
+bool AShooterSandboxPlayerState::SetMaxEnergy_Validate(int max)
+{
+	return true;
+}
+
+void AShooterSandboxPlayerState::SetMaxEnergy_Implementation(int max)
+{
+	currentMaxEnergy = max;
+}
+
+int AShooterSandboxPlayerState::GetMaxEnergy()
+{
+	return currentMaxEnergy;
+}
+
+void AShooterSandboxPlayerState::OnRep_EnergyChanged()
+{
+	if (GetOwner())
+	{
+		if(Cast<AShooterSandboxCharacter>(Cast<AShooterSandboxController>(GetOwner())->GetPawn()))
+		{
+			Cast<AShooterSandboxCharacter>(Cast<AShooterSandboxController>(GetOwner())->GetPawn())->Client_UpdateEnergyOnHUD();
+		}
+	}
 }
 
 #pragma endregion
@@ -90,10 +122,11 @@ void AShooterSandboxPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME_CONDITION(AShooterSandboxPlayerState, energy, COND_OwnerOnly);
+
 	DOREPLIFETIME(AShooterSandboxPlayerState, health);
 	DOREPLIFETIME(AShooterSandboxPlayerState, playerScore);
 	DOREPLIFETIME(AShooterSandboxPlayerState, playerNumber);
-	DOREPLIFETIME(AShooterSandboxPlayerState, energy);
 	DOREPLIFETIME(AShooterSandboxPlayerState, numConstructsConstructed);
 	DOREPLIFETIME(AShooterSandboxPlayerState, numConstructsBroken);
 	DOREPLIFETIME(AShooterSandboxPlayerState, kills);

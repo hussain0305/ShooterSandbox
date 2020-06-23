@@ -78,6 +78,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Energy")
 	void UpdateEnergyLevel(int newEnergyLevel, int maxEnergyLevel);
 
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Energy")
+	void OutOfEnergy();
+
 	UFUNCTION(BlueprintImplementableEvent, Category = "Gameplay")
 	void ShowScorecard(bool shouldOpen);
 

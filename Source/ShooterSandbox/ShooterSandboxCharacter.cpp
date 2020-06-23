@@ -17,6 +17,7 @@
 #include "Components/InputComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
+#include "TimerManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -80,6 +81,9 @@ void AShooterSandboxCharacter::SetupPlayerInputComponent(class UInputComponent* 
 
 	PlayerInputComponent->BindAction("Use", IE_Pressed, this, &AShooterSandboxCharacter::AttemptControlOffensiveConstruct);
 	PlayerInputComponent->BindAction("SwitchConstructionMode", IE_Pressed, this, &AShooterSandboxCharacter::SwitchConstructionMode);
+
+	PlayerInputComponent->BindAction("Jetpack", IE_Pressed, this, &AShooterSandboxCharacter::ToggleJetpackOn);
+	PlayerInputComponent->BindAction("Jetpack", IE_Released, this, &AShooterSandboxCharacter::ToggleJetpackOff);
 
 	PlayerInputComponent->BindAction("TestData", IE_Pressed, this, &AShooterSandboxCharacter::PrintTestData);
 
@@ -274,6 +278,44 @@ void AShooterSandboxCharacter::Server_ToggleRun_Implementation(float newSpeed)
 	GetCharacterMovement()->MaxWalkSpeed = newSpeed;
 }
 
+void AShooterSandboxCharacter::ToggleJetpackOn()
+{
+	if (GetWorld())
+	{
+		jetpackActive = true;
+		Jetpack();
+		GetWorld()->GetTimerManager().SetTimer(jetpack, this, &AShooterSandboxCharacter::Jetpack, 1.f, true);
+	}
+}
+
+void AShooterSandboxCharacter::ToggleJetpackOff()
+{
+	jetpackActive = false;
+	if (jetpack.IsValid())
+	{
+		GetWorldTimerManager().ClearTimer(jetpack);
+		jetpack.Invalidate();
+	}
+}
+
+bool AShooterSandboxCharacter::Jetpack_Validate()
+{
+	return true;
+}
+
+void AShooterSandboxCharacter::Jetpack_Implementation()
+{
+	if (myPlayerState->GetEnergy() > JETPACK_THRUST_COST)
+	{
+		GetCharacterMovement()->Velocity += FVector(0, 0, jetpackThrust);
+		Server_SpendEnergy(JETPACK_THRUST_COST, GetWorld()->GetAuthGameMode<AShooterSandboxGameMode>()->MAX_ENERGY_AMOUNT);
+	}
+	else
+	{
+		PlayerOutOfEnergy();
+	}
+}
+
 #pragma endregion
 
 
@@ -407,47 +449,35 @@ bool AShooterSandboxCharacter::GetSpawnLocationAndRotation(FVector &spawnLocatio
 	return false;
 }
 
-bool AShooterSandboxCharacter::AddEnergy_Validate(int amount, int maxEnergy)
+bool AShooterSandboxCharacter::Server_AddEnergy_Validate(int amount, int maxEnergy)
 {
 	return true;
 }
 
-void AShooterSandboxCharacter::AddEnergy_Implementation(int amount, int maxEnergy)
+void AShooterSandboxCharacter::Server_AddEnergy_Implementation(int amount, int maxEnergy)
 {
 	if (!myEnergyPack || !myPlayerState || !myController)
 	{
-		//if (!myEnergyPack) {
-		//	UKismetSystemLibrary::PrintString(this, (TEXT("No Energy Pack")));
-		//}
-		//if (!myPlayerState) {
-		//	UKismetSystemLibrary::PrintString(this, (TEXT("No myPlayerState")));
-		//}
-		//if (!myController) {
-		//	UKismetSystemLibrary::PrintString(this, (TEXT("No myController")));
-		//}
-
 		return;
 	}
 
+	myPlayerState->SetMaxEnergy(maxEnergy);
 	int currentEnergy = myPlayerState->GetEnergy();
+
 	if (currentEnergy >= maxEnergy)
 	{
 		return;
 	}
 
 	myPlayerState->IncrementOrDecrementEnergyBy((currentEnergy + amount > maxEnergy) ? (maxEnergy - currentEnergy) : amount);
-
-	myHUD->UpdateEnergyLevel(myPlayerState->GetEnergy(), maxEnergy);
-
-	return;
 }
 
-bool AShooterSandboxCharacter::SpendEnergy_Validate(int amount, int maxEnergy)
+bool AShooterSandboxCharacter::Server_SpendEnergy_Validate(int amount, int maxEnergy)
 {
 	return true;
 }
 
-void AShooterSandboxCharacter::SpendEnergy_Implementation(int amount, int maxEnergy)
+void AShooterSandboxCharacter::Server_SpendEnergy_Implementation(int amount, int maxEnergy)
 {
 	if (!myEnergyPack || myPlayerState->GetEnergy() < amount)
 	{
@@ -462,10 +492,22 @@ void AShooterSandboxCharacter::SpendEnergy_Implementation(int amount, int maxEne
 	}
 
 	myPlayerState->IncrementOrDecrementEnergyBy(-amount);
+}
 
-	myHUD->UpdateEnergyLevel(myPlayerState->GetEnergy(), maxEnergy);
-	
-	return;
+void AShooterSandboxCharacter::Client_UpdateEnergyOnHUD_Implementation()
+{
+	if (!myHUD || !myPlayerState)
+	{
+		return;
+	}
+
+	myHUD->UpdateEnergyLevel(myPlayerState->GetEnergy(), myPlayerState->GetMaxEnergy());
+}
+
+void AShooterSandboxCharacter::PlayerOutOfEnergy_Implementation()
+{
+	myHUD->ShowNotificationMessage("Not enough Energy");
+	myHUD->OutOfEnergy();
 }
 
 void AShooterSandboxCharacter::TryConstruct(TSubclassOf<class ABaseConstruct> construct)
@@ -486,7 +528,7 @@ void AShooterSandboxCharacter::TryConstruct(TSubclassOf<class ABaseConstruct> co
 	if (GetSpawnLocationAndRotation(spawnLocation, spawnRotation)) {
 		if (construct.GetDefaultObject()->constructionCost > myPlayerState->GetEnergy())
 		{
-			myHUD->ShowNotificationMessage("Not enough Energy");
+			PlayerOutOfEnergy();
 			return;
 		}
 		ServerConstruct(construct, myController, spawnLocation, spawnRotation);
@@ -538,7 +580,7 @@ void AShooterSandboxCharacter::PickupEnergyPackOnOwningClient_Implementation(AEn
 		return;
 	}
 
-	myEnergyPack = thePack;
+	//myEnergyPack = thePack;
 
 	myHUD->SetHasEnergyPack(true);
 }
@@ -561,6 +603,8 @@ void AShooterSandboxCharacter::DropEnergyPack_Implementation()
 	myEnergyPack->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	myEnergyPack->ScheduleReactivation();
 
+	myEnergyPack = nullptr;
+
 	DropEnergyPackOnOwningClient();
 }
 
@@ -574,7 +618,7 @@ void AShooterSandboxCharacter::DropEnergyPackOnOwningClient_Implementation()
 	if (!myController) {
 		return;
 	}
-	myEnergyPack = nullptr;
+	//myEnergyPack = nullptr;
 
 	myHUD->SetHasEnergyPack(false);
 }
@@ -741,14 +785,16 @@ void AShooterSandboxCharacter::Server_AttemptControlOffensiveConstruct_Implement
 
 void AShooterSandboxCharacter::PrintTestData()
 {
-	FString msg = "Number of constructs I've built - " + FString::FromInt(Cast<AShooterSandboxPlayerState>(myController->PlayerState)->GetNumConstructsBuilt());
-	if (Cast<AShooterSandboxPlayerState>(myController->PlayerState)) {
-		msg += " true";
-	}
-	else {
-		msg += " true";
-	}
-	UKismetSystemLibrary::PrintString(this, (TEXT("%s"), *msg));
+	//FString msg = "Number of constructs I've built - " + FString::FromInt(Cast<AShooterSandboxPlayerState>(myController->PlayerState)->GetNumConstructsBuilt());
+	//if (Cast<AShooterSandboxPlayerState>(myController->PlayerState)) {
+	//	msg += " true";
+	//}
+	//else {
+	//	msg += " true";
+	//}
+	//UKismetSystemLibrary::PrintString(this, (TEXT("%s"), *msg));
+	UKismetSystemLibrary::PrintString(this, (TEXT("Energy was changed")));
+
 }
 
 void AShooterSandboxCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const

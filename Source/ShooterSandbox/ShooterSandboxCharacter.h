@@ -25,6 +25,7 @@ public:
 	AShooterSandboxCharacter();
 
 	const float BUILD_DISTANCE = 1500;
+	const float JETPACK_THRUST_COST = 10;
 
 	class ABaseWeapon* weaponCurrentlyHeld;
 
@@ -33,15 +34,22 @@ public:
 	EConstructionMode currentConstructionMode;
 
 	FTimerHandle movementStateMonitoring;
+	FTimerHandle jetpack;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	bool bHasWeapon = false;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	bool jetpackActive = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	float BaseTurnRate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	float BaseLookUpRate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+	float jetpackThrust = 1000;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	TSubclassOf<class UCameraShake> runCamShake;
@@ -98,11 +106,17 @@ public:
 
 	//************ Energy and Energy Pack Functions ************
 	
-	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
-	void AddEnergy(int amount, int maxEnergy);
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
+	void Server_AddEnergy(int amount, int maxEnergy);
 
-	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
-	void SpendEnergy(int amount, int maxEnergy);
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
+	void Server_SpendEnergy(int amount, int maxEnergy);
+
+	UFUNCTION(Client, Reliable, BlueprintCallable, Category = "Energy")
+	void Client_UpdateEnergyOnHUD();
+
+	UFUNCTION(Client, Unreliable)
+	void PlayerOutOfEnergy();
 
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
 	void PickupEnergyPack(class AEnergyPack* thePack);
@@ -181,6 +195,11 @@ protected:
 	void ToggleRunOn();
 	void ToggleRunOff();
 	void ToggleRunCamShake(bool startShake);
+
+	void ToggleJetpackOn();
+	void ToggleJetpackOff();
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Jetpack();
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_ToggleRun(float newSpeed);

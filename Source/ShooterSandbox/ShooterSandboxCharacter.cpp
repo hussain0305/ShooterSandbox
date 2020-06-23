@@ -305,7 +305,7 @@ bool AShooterSandboxCharacter::Jetpack_Validate()
 
 void AShooterSandboxCharacter::Jetpack_Implementation()
 {
-	if (myPlayerState->GetEnergy() > JETPACK_THRUST_COST)
+	if (myPlayerState->GetEnergy() >= JETPACK_THRUST_COST)
 	{
 		GetCharacterMovement()->Velocity += FVector(0, 0, jetpackThrust);
 		Server_SpendEnergy(JETPACK_THRUST_COST, GetWorld()->GetAuthGameMode<AShooterSandboxGameMode>()->MAX_ENERGY_AMOUNT);

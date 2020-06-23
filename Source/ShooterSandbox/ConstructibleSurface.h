@@ -2,12 +2,13 @@
 
 #pragma once
 
+#include "BaseConstruct.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "ConstructibleSurface.generated.h"
 
 UCLASS()
-class SHOOTERSANDBOX_API AConstructibleSurface : public AActor
+class SHOOTERSANDBOX_API AConstructibleSurface : public ABaseConstruct//AActor
 {
 	GENERATED_BODY()
 	

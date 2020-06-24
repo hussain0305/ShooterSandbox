@@ -123,6 +123,7 @@ void AShooterSandboxGameMode::Server_GiveEnergyToPlayers()
 		if (currentPlayerCharacter)
 		{
 			currentPlayerCharacter->Server_AddEnergy(PULSE_ENERGY_AMOUNT, MAX_ENERGY_AMOUNT);
+			currentPlayerCharacter->Client_EnergyNotification("Energy Pulse", PULSE_ENERGY_AMOUNT, 0);
 		}
 	}
 }
@@ -158,7 +159,7 @@ void AShooterSandboxGameMode::Server_SpawnConstruct(TSubclassOf<ABaseConstruct> 
 	}
 	else
 	{
-		playerController->ProxyForHUD_AlertMessage("Build failed. Cell is occupied");
+		playerController->ProxyForHUD_AlertMessage("Build failed. Cell is occupied", 2);
 	}
 }
 

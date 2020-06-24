@@ -49,7 +49,7 @@ public:
 	void SetTurretMode(int modeNum);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "UI Messages")
-	void ShowAlertMessage(const FString& message);
+	void ShowAlertMessage(const FString& message, int greenRedNeutral);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "UI Messages")
 	void ShowNotificationMessage(const FString& message);

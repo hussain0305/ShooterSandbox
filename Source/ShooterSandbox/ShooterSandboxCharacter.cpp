@@ -309,6 +309,7 @@ void AShooterSandboxCharacter::Jetpack_Implementation()
 	{
 		GetCharacterMovement()->Velocity += FVector(0, 0, jetpackThrust);
 		Server_SpendEnergy(JETPACK_THRUST_COST, GetWorld()->GetAuthGameMode<AShooterSandboxGameMode>()->MAX_ENERGY_AMOUNT);
+		Client_EnergyNotification("Jetpack Thrust", JETPACK_THRUST_COST, 1);
 	}
 	else
 	{
@@ -722,6 +723,23 @@ bool AShooterSandboxCharacter::Client_UpdateWeaponAmmo_Validate(int max, int cur
 void AShooterSandboxCharacter::Client_UpdateWeaponAmmo_Implementation(int max, int current)
 {
 	myHUD->UpdateWeaponAmmo(current, max);
+}
+
+void AShooterSandboxCharacter::Client_EnergyNotification_Implementation(const FString & reason, int amount, int greenRedNeut)
+{
+	FString msg;
+	if (greenRedNeut == 1)
+	{
+		msg = reason + " ( - " + FString::FromInt(amount) + " )";
+	}
+	if (greenRedNeut == 0)
+	{
+		msg = reason + " ( + " + FString::FromInt(amount) + " )";
+	}
+	if (myHUD)
+	{
+		myHUD->ShowAlertMessage(msg, greenRedNeut);
+	}
 }
 
 void AShooterSandboxCharacter::StartWeaponFire()

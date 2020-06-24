@@ -60,17 +60,12 @@ bool AShooterSandboxController::PostConstructionUpdate_Validate(TSubclassOf<ABas
 
 void AShooterSandboxController::PostConstructionUpdate_Implementation(TSubclassOf<ABaseConstruct> construct)
 {
-	Cast<AAShooterSandboxHUD>(GetHUD())->ShowAlertMessage("" + construct.GetDefaultObject()->constructName + " constructed");
+	Cast<AAShooterSandboxHUD>(GetHUD())->ShowAlertMessage("" + construct.GetDefaultObject()->constructName + " constructed ( - " + FString::FromInt(construct.GetDefaultObject()->constructionCost) +" )", 1);
 }
 
-bool AShooterSandboxController::ProxyForHUD_AlertMessage_Validate(const FString& message)
+void AShooterSandboxController::ProxyForHUD_AlertMessage_Implementation(const FString& message, int greenRedNeut)
 {
-	return true;
-}
-
-void AShooterSandboxController::ProxyForHUD_AlertMessage_Implementation(const FString& message)
-{
-	Cast<AAShooterSandboxHUD>(GetHUD())->ShowAlertMessage(message);
+	Cast<AAShooterSandboxHUD>(GetHUD())->ShowAlertMessage(message, greenRedNeut);
 }
 
 void AShooterSandboxController::OpenScorecard()

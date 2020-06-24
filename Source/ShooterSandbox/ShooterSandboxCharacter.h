@@ -139,6 +139,9 @@ public:
 	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
 	void Client_UpdateWeaponAmmo(int max, int current);
 
+	UFUNCTION(Client, Reliable, BlueprintCallable, Category = "Energy")
+	void Client_EnergyNotification(const FString& reason, int amount, int greenRedNeut);
+
 	void StartWeaponFire();
 	void StopWeaponFire();
 	void WeaponAltMode();

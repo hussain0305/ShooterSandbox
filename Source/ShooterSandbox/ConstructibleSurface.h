@@ -19,6 +19,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Construction Grid")
 	float gridSizeInUnits;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Construction Grid")
+	bool requiresParenting = false;
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser) override;
 
 protected:
 	// Called when the game starts or when spawned

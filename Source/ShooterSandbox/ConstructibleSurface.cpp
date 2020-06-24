@@ -11,6 +11,12 @@ AConstructibleSurface::AConstructibleSurface()
 
 }
 
+float AConstructibleSurface::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Na uh we dont take damage here"));
+	return 0;
+}
+
 // Called when the game starts or when spawned
 void AConstructibleSurface::BeginPlay()
 {

@@ -41,7 +41,7 @@ float ABaseConstruct::TakeDamage(float DamageAmount, FDamageEvent const & Damage
 	if (health < 0)
 	{
 		Cast<AShooterSandboxPlayerState>(EventInstigator->PlayerState)->HasBrokenConstruct(maxHealth);
-		Destroy(this);
+		DestroyConstruct();
 	}
 
 	return health;
@@ -55,6 +55,15 @@ void ABaseConstruct::SetConstructedBy(AShooterSandboxController* owner)
 AShooterSandboxController* ABaseConstruct::GetConstructedBy()
 {
 	return constructedBy;
+}
+
+void ABaseConstruct::DestroyConstruct()
+{
+	if (Role < ROLE_Authority) {
+		return;
+	}
+
+	Destroy(this);
 }
 
 void ABaseConstruct::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const 

@@ -144,6 +144,16 @@ void ABaseOffensiveConstruct::OnOverlapEnded(UPrimitiveComponent * OverlappedCom
 	}
 }
 
+void ABaseOffensiveConstruct::DestroyConstruct()
+{
+	if (Role < ROLE_Authority) {
+		return;
+	}
+	Server_LeaveOffensive();
+
+	Destroy(this);
+}
+
 bool ABaseOffensiveConstruct::Multicast_ControlOffensive_Validate(AShooterSandboxController * occupantController)
 {
 	return true;

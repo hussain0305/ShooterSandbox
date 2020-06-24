@@ -52,4 +52,6 @@ public:
 	void SetConstructedBy(class AShooterSandboxController* owner);
 
 	class AShooterSandboxController* GetConstructedBy();
+
+	virtual void DestroyConstruct();
 };

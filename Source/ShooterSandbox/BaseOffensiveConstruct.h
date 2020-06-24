@@ -144,6 +144,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OnOverlapEnded(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	void DestroyConstruct() override;
+
 	FORCEINLINE bool GetIsBeingUsed() const { return isBeingUsed; }
 };
 

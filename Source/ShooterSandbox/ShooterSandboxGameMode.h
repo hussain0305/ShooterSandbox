@@ -46,7 +46,7 @@ public:
 
 	void Server_GiveEnergyToPlayers();
 
-	void Server_SpawnConstruct(TSubclassOf<class ABaseConstruct> construct, class AShooterSandboxController* playerController, FVector spawnPosition, FRotator spawnRotation);
+	void Server_SpawnConstruct(TSubclassOf<class ABaseConstruct> construct, class AConstructibleSurface* surfaceToSpawnOn, class AShooterSandboxController* playerController, FVector spawnPosition, FRotator spawnRotation);
 
 	void Temp_PrintLog();
 };

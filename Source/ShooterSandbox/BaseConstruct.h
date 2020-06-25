@@ -36,6 +36,9 @@ public:
 	bool isGridAligned;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool canBeParented;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString constructName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

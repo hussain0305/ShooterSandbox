@@ -340,12 +340,14 @@ void AShooterSandboxCharacter::MouseWheelUp()
 	myHUD->ScrollUpList();
 }
 
-bool AShooterSandboxCharacter::GetSpawnLocationAndRotation(FVector &spawnLocation, FRotator &spawnRotation)
+bool AShooterSandboxCharacter::GetSpawnLocationAndRotation(FVector &spawnLocation, FRotator &spawnRotation, class AConstructibleSurface* &surfaceToSpawnOn, TSubclassOf<class ABaseConstruct> construct)
 {
 	if (!GetWorld())
 	{
 		return false;
 	}
+
+	surfaceToSpawnOn = nullptr;
 
 	if (currentConstructionMode == EConstructionMode::Surface)
 	{
@@ -360,6 +362,11 @@ bool AShooterSandboxCharacter::GetSpawnLocationAndRotation(FVector &spawnLocatio
 
 			if (Cast<AConstructibleSurface>(hit.Actor))
 			{
+				if (Cast<AConstructibleSurface>(hit.Actor)->requiresParenting && !construct.GetDefaultObject()->canBeParented)
+				{
+					myHUD->ShowNotificationMessage("Can't construct " + construct.GetDefaultObject()->constructName + " on " + Cast<AConstructibleSurface>(hit.Actor)->constructName);
+					return false;
+				}
 				spawnLocation = hit.ImpactPoint;
 
 				float gridSize = Cast<AConstructibleSurface>(hit.Actor)->gridSizeInUnits;
@@ -371,6 +378,7 @@ bool AShooterSandboxCharacter::GetSpawnLocationAndRotation(FVector &spawnLocatio
 
 				spawnLocation = FVector(gridAlignedX, gridAlignedY, spawnLocation.Z);
 				spawnRotation = GetActorRotation();
+				surfaceToSpawnOn = Cast<AConstructibleSurface>(hit.Actor);
 
 				return true;
 			}
@@ -526,13 +534,14 @@ void AShooterSandboxCharacter::TryConstruct(TSubclassOf<class ABaseConstruct> co
 
 	FVector spawnLocation;
 	FRotator spawnRotation;
-	if (GetSpawnLocationAndRotation(spawnLocation, spawnRotation)) {
+	AConstructibleSurface* surfaceToSpawnOn;
+	if (GetSpawnLocationAndRotation(spawnLocation, spawnRotation, surfaceToSpawnOn, construct)) {
 		if (construct.GetDefaultObject()->constructionCost > myPlayerState->GetEnergy())
 		{
 			PlayerOutOfEnergy();
 			return;
 		}
-		ServerConstruct(construct, myController, spawnLocation, spawnRotation);
+		ServerConstruct(construct, surfaceToSpawnOn, myController, spawnLocation, spawnRotation);
 	}
 }
 
@@ -640,12 +649,12 @@ void AShooterSandboxCharacter::ToggleConstructionMenu()
 	Cast<AAShooterSandboxHUD>(Cast<AShooterSandboxController>(GetController())->GetHUD())->ToggleConstructionMenu();
 }
 
-bool AShooterSandboxCharacter::ServerConstruct_Validate(TSubclassOf<ABaseConstruct> construct, AShooterSandboxController* constructorController, FVector spawnLocation, FRotator spawnRotation)
+bool AShooterSandboxCharacter::ServerConstruct_Validate(TSubclassOf<ABaseConstruct> construct, AConstructibleSurface* surfaceToSpawnOn, AShooterSandboxController* constructorController, FVector spawnLocation, FRotator spawnRotation)
 {
 	return true;
 }
 
-void AShooterSandboxCharacter::ServerConstruct_Implementation(TSubclassOf<ABaseConstruct> construct, AShooterSandboxController* constructorController, FVector spawnLocation, FRotator spawnRotation)
+void AShooterSandboxCharacter::ServerConstruct_Implementation(TSubclassOf<ABaseConstruct> construct, AConstructibleSurface* surfaceToSpawnOn, AShooterSandboxController* constructorController, FVector spawnLocation, FRotator spawnRotation)
 {
 	if (construct == nullptr || constructorController == nullptr)
 	{
@@ -655,14 +664,9 @@ void AShooterSandboxCharacter::ServerConstruct_Implementation(TSubclassOf<ABaseC
 	UWorld* world = GetWorld();
 	if (world && world->GetAuthGameMode<AShooterSandboxGameMode>())
 	{
-		world->GetAuthGameMode<AShooterSandboxGameMode>()->Server_SpawnConstruct(construct, constructorController, spawnLocation, spawnRotation);
+		world->GetAuthGameMode<AShooterSandboxGameMode>()->Server_SpawnConstruct(construct, surfaceToSpawnOn, constructorController, spawnLocation, spawnRotation);
 	}
 }
-
-//void AShooterSandboxCharacter::OnRep_EnergyChanged()
-//{
-//	UKismetSystemLibrary::PrintString(this, (TEXT("Energy CHangfed")));
-//}
 
 bool AShooterSandboxCharacter::Multicast_PickupOrDropWeapon_Validate(ABaseWeapon* theWeapon)
 {

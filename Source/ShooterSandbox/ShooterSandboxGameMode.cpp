@@ -6,6 +6,7 @@
 #include "PickupSpawnArea.h"
 #include "EnergyPack.h"
 #include "ShooterSandboxPlayerState.h"
+#include "ConstructibleSurface.h"
 #include "AShooterSandboxHUD.h"
 #include "ShooterSandboxGameState.h"
 #include "ShooterSandboxController.h"
@@ -128,7 +129,7 @@ void AShooterSandboxGameMode::Server_GiveEnergyToPlayers()
 	}
 }
 
-void AShooterSandboxGameMode::Server_SpawnConstruct(TSubclassOf<ABaseConstruct> construct, AShooterSandboxController* playerController, FVector spawnPosition, FRotator spawnRotation)
+void AShooterSandboxGameMode::Server_SpawnConstruct(TSubclassOf<ABaseConstruct> construct, AConstructibleSurface* surfaceToSpawnOn, AShooterSandboxController* playerController, FVector spawnPosition, FRotator spawnRotation)
 {
 	UWorld* world = GetWorld();
 
@@ -150,12 +151,16 @@ void AShooterSandboxGameMode::Server_SpawnConstruct(TSubclassOf<ABaseConstruct> 
 
 	if (spawnedConstruct)
 	{
+		if (surfaceToSpawnOn && surfaceToSpawnOn->requiresParenting)
+		{
+			spawnedConstruct->AttachToActor(surfaceToSpawnOn, FAttachmentTransformRules::KeepWorldTransform);
+		}
+
 		spawnedConstruct->SetConstructedBy(playerController);
 		playerController->PostConstructionUpdate(construct);
 
 		Cast<AShooterSandboxCharacter>(playerController->GetCharacter())->Server_SpendEnergy(construct.GetDefaultObject()->constructionCost, MAX_ENERGY_AMOUNT);
 		Cast<AShooterSandboxPlayerState>(playerController->PlayerState)->HasConstructed(construct.GetDefaultObject()->constructionCost);
-		//Temp_PrintLog();
 	}
 	else
 	{

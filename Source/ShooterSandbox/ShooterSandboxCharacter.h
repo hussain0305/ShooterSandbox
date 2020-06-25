@@ -88,12 +88,12 @@ public:
 	void TryQuickConstruct();
 	
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Construction")
-	void ServerConstruct(TSubclassOf<class ABaseConstruct> construct, class AShooterSandboxController* constructorController, FVector spawnLocation, FRotator spawnRotation);
+	void ServerConstruct(TSubclassOf<class ABaseConstruct> construct, class AConstructibleSurface* surfaceToSpawnOn, class AShooterSandboxController* constructorController, FVector spawnLocation, FRotator spawnRotation);
 
 	//************ Other Functions ************
 
 	UFUNCTION(BlueprintCallable, Category = "Construction")
-	bool GetSpawnLocationAndRotation(FVector &spawnLocation, FRotator &spawnRotation);
+	bool GetSpawnLocationAndRotation(FVector &spawnLocation, FRotator &spawnRotation, class AConstructibleSurface* &surfaceToSpawnOn, TSubclassOf<class ABaseConstruct> construct);
 
 	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Gameplay")
 	void SetOffensiveConstructInVicinity(class ABaseOffensiveConstruct* construct);

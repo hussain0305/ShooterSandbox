@@ -134,7 +134,7 @@ void ABaseOffensiveConstruct::OnOverlapBegan(UPrimitiveComponent * OverlappedCom
 
 void ABaseOffensiveConstruct::OnOverlapEnded(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex)
 {
-	if (!HasAuthority()) {
+	if (isBeingUsed || !HasAuthority()) {// TEMP TEST -- REMOVE isBeingUsed || 
 		return;
 	}
 

@@ -199,8 +199,8 @@ protected:
 	void ToggleRunOff();
 	void ToggleRunCamShake(bool startShake);
 
-	void ToggleJetpackOn();
-	void ToggleJetpackOff();
+	void CombinedJumpJetpackOn();
+	void CombinedJumpJetpackOff();
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Jetpack();
 

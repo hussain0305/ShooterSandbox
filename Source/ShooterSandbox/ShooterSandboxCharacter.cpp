@@ -60,8 +60,8 @@ AShooterSandboxCharacter::AShooterSandboxCharacter()
 void AShooterSandboxCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	check(PlayerInputComponent);
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AShooterSandboxCharacter::CombinedJumpJetpackOn);
+	PlayerInputComponent->BindAction("Jump", IE_Released, this, &AShooterSandboxCharacter::CombinedJumpJetpackOff);
 
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AShooterSandboxCharacter::ToggleCrouch);
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AShooterSandboxCharacter::ToggleCrouch);
@@ -81,9 +81,6 @@ void AShooterSandboxCharacter::SetupPlayerInputComponent(class UInputComponent* 
 
 	PlayerInputComponent->BindAction("Use", IE_Pressed, this, &AShooterSandboxCharacter::AttemptControlOffensiveConstruct);
 	PlayerInputComponent->BindAction("SwitchConstructionMode", IE_Pressed, this, &AShooterSandboxCharacter::SwitchConstructionMode);
-
-	PlayerInputComponent->BindAction("Jetpack", IE_Pressed, this, &AShooterSandboxCharacter::ToggleJetpackOn);
-	PlayerInputComponent->BindAction("Jetpack", IE_Released, this, &AShooterSandboxCharacter::ToggleJetpackOff);
 
 	PlayerInputComponent->BindAction("TestData", IE_Pressed, this, &AShooterSandboxCharacter::PrintTestData);
 
@@ -268,18 +265,13 @@ void AShooterSandboxCharacter::ToggleRunCamShake(bool startShake)
 	}
 }
 
-bool AShooterSandboxCharacter::Server_ToggleRun_Validate(float newSpeed)
+void AShooterSandboxCharacter::CombinedJumpJetpackOn()
 {
-	return true;
-}
+	if (!GetCharacterMovement()->IsFalling()) {
+		Jump();
+		return;
+	}
 
-void AShooterSandboxCharacter::Server_ToggleRun_Implementation(float newSpeed)
-{
-	GetCharacterMovement()->MaxWalkSpeed = newSpeed;
-}
-
-void AShooterSandboxCharacter::ToggleJetpackOn()
-{
 	if (GetWorld())
 	{
 		jetpackActive = true;
@@ -288,14 +280,26 @@ void AShooterSandboxCharacter::ToggleJetpackOn()
 	}
 }
 
-void AShooterSandboxCharacter::ToggleJetpackOff()
+void AShooterSandboxCharacter::CombinedJumpJetpackOff()
 {
+	StopJumping();
+
 	jetpackActive = false;
 	if (jetpack.IsValid())
 	{
 		GetWorldTimerManager().ClearTimer(jetpack);
 		jetpack.Invalidate();
 	}
+}
+
+bool AShooterSandboxCharacter::Server_ToggleRun_Validate(float newSpeed)
+{
+	return true;
+}
+
+void AShooterSandboxCharacter::Server_ToggleRun_Implementation(float newSpeed)
+{
+	GetCharacterMovement()->MaxWalkSpeed = newSpeed;
 }
 
 bool AShooterSandboxCharacter::Jetpack_Validate()
@@ -825,3 +829,27 @@ void AShooterSandboxCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProper
 
 	DOREPLIFETIME(AShooterSandboxCharacter, myEnergyPack);
 }
+
+//
+//PlayerInputComponent->BindAction("Jetpack", IE_Pressed, this, &AShooterSandboxCharacter::ToggleJetpackOn);
+//PlayerInputComponent->BindAction("Jetpack", IE_Released, this, &AShooterSandboxCharacter::ToggleJetpackOff);
+//
+//void AShooterSandboxCharacter::ToggleJetpackOn()
+//{
+//	if (GetWorld())
+//	{
+//		jetpackActive = true;
+//		Jetpack();
+//		GetWorld()->GetTimerManager().SetTimer(jetpack, this, &AShooterSandboxCharacter::Jetpack, 1.f, true);
+//	}
+//}
+//
+//void AShooterSandboxCharacter::ToggleJetpackOff()
+//{
+//	jetpackActive = false;
+//	if (jetpack.IsValid())
+//	{
+//		GetWorldTimerManager().ClearTimer(jetpack);
+//		jetpack.Invalidate();
+//	}
+//}

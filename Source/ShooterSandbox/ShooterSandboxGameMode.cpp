@@ -140,7 +140,7 @@ void AShooterSandboxGameMode::Server_SpawnConstruct(TSubclassOf<ABaseConstruct> 
 
 	//Raise the construct up slightly so it doesn't collide with the building floor
 	spawnPosition += construct.GetDefaultObject()->GetActorUpVector() * 1;
-	spawnRotation = construct.GetDefaultObject()->isGridAligned ? FRotator::ZeroRotator : spawnRotation;
+	spawnRotation = construct.GetDefaultObject()->isGridAligned ? GetAlignedRotation(spawnRotation) : spawnRotation;
 
 	FActorSpawnParameters spawnParams; 
 	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
@@ -183,4 +183,32 @@ void AShooterSandboxGameMode::Temp_PrintLog()
 			}
 		}
 	}
+}
+
+FRotator AShooterSandboxGameMode::GetAlignedRotation(FRotator rawRotation)
+{
+	int aligner = (int)rawRotation.Vector().Y % 45;
+
+	float y = rawRotation.Yaw;
+
+	if (y < -45 && y > -135) {
+		UKismetSystemLibrary::PrintString(this, (TEXT("A")));
+		y = -90;
+	}
+	else if (y > 45 && y < 135) {
+		UKismetSystemLibrary::PrintString(this, (TEXT("B")));
+		y = 90;
+	}
+
+	else if (y > -45 && y < 45) {
+		UKismetSystemLibrary::PrintString(this, (TEXT("C")));
+		y = 0;
+	}
+
+	else {
+		UKismetSystemLibrary::PrintString(this, (TEXT("D")));
+		y = 179;
+	}
+
+	return FRotator(rawRotation.Pitch, y, rawRotation.Roll);
 }

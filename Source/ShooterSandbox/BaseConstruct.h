@@ -44,6 +44,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int constructionCost;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Materials)
+	TArray<class UMaterialInstance*> appearanceOptions;
+
 //=#=#=#=#= FUNCTIONS =#=#=#=#=
 
 	virtual void BeginPlay() override;
@@ -57,4 +60,7 @@ public:
 	class AShooterSandboxController* GetConstructedBy();
 
 	virtual void DestroyConstruct();
+
+	UFUNCTION(BlueprintCallable, Category = "Materials")
+	void RefreshAppearance();
 };

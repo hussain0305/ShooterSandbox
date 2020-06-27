@@ -5,6 +5,7 @@
 #include "ShooterSandboxController.h"
 #include "ShooterSandboxPlayerState.h"
 #include "Net/UnrealNetwork.h"
+#include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -18,6 +19,8 @@ void ABaseConstruct::BeginPlay()
 {
 	Super::BeginPlay();
 	health = maxHealth;
+
+	RefreshAppearance();
 }
 
 // Called every frame
@@ -64,6 +67,19 @@ void ABaseConstruct::DestroyConstruct()
 	}
 
 	Destroy(this);
+}
+
+void ABaseConstruct::RefreshAppearance()
+{
+	TArray<UStaticMeshComponent*> allStaticMeshes;
+	Cast<AActor>(this)->GetComponents<UStaticMeshComponent>(allStaticMeshes);
+	
+	if (allStaticMeshes.Num() == 0 || appearanceOptions.Num() == 0)
+	{
+		return;
+	}
+
+	allStaticMeshes[0]->SetMaterial(0, appearanceOptions[FMath::RandRange(0, appearanceOptions.Num() - 1)]);
 }
 
 void ABaseConstruct::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const 

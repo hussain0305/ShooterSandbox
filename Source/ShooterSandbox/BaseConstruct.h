@@ -50,7 +50,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool shouldForm;
 
-
 //=#=#=#=#= FUNCTIONS =#=#=#=#=
 
 	virtual void BeginPlay() override;

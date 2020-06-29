@@ -77,6 +77,19 @@ void ABaseConstruct::RefreshAppearance()
 		FormationScaling(FVector(0, 0, 0), Cast<AActor>(this)->GetActorScale3D(), 0.0f);
 	}
 
+	TArray<UActorComponent*> mainMesh;
+	mainMesh = Cast<AActor>(this)->GetComponentsByTag(UStaticMeshComponent::StaticClass(), FName("MainMesh"));
+
+	if (mainMesh.Num() != 0)
+	{
+		if (Cast<UStaticMeshComponent>(mainMesh[0]))
+		{
+			Cast<UStaticMeshComponent>(mainMesh[0])->SetMaterial(0, appearanceOptions[FMath::RandRange(0, appearanceOptions.Num() - 1)]);
+		}
+
+		return;
+	}
+
 	TArray<UStaticMeshComponent*> allStaticMeshes;
 	Cast<AActor>(this)->GetComponents<UStaticMeshComponent>(allStaticMeshes);
 	

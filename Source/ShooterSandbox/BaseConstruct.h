@@ -47,6 +47,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Materials)
 	TArray<class UMaterialInstance*> appearanceOptions;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool shouldForm;
+
+
 //=#=#=#=#= FUNCTIONS =#=#=#=#=
 
 	virtual void BeginPlay() override;
@@ -63,4 +67,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Materials")
 	void RefreshAppearance();
+
+	UFUNCTION(Category = "Materials")
+	void FormationScaling(FVector current, FVector fullScale, float alpha);
 };

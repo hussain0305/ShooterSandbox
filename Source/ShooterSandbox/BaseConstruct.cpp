@@ -6,6 +6,7 @@
 #include "ShooterSandboxPlayerState.h"
 #include "Net/UnrealNetwork.h"
 #include "Components/StaticMeshComponent.h"
+#include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -71,6 +72,11 @@ void ABaseConstruct::DestroyConstruct()
 
 void ABaseConstruct::RefreshAppearance()
 {
+	if (shouldForm)
+	{
+		FormationScaling(FVector(0, 0, 0), Cast<AActor>(this)->GetActorScale3D(), 0.0f);
+	}
+
 	TArray<UStaticMeshComponent*> allStaticMeshes;
 	Cast<AActor>(this)->GetComponents<UStaticMeshComponent>(allStaticMeshes);
 	
@@ -80,6 +86,21 @@ void ABaseConstruct::RefreshAppearance()
 	}
 
 	allStaticMeshes[0]->SetMaterial(0, appearanceOptions[FMath::RandRange(0, appearanceOptions.Num() - 1)]);
+
+}
+
+void ABaseConstruct::FormationScaling(FVector current, FVector fullScale, float alpha)
+{
+	Cast<AActor>(this)->SetActorScale3D(FMath::Lerp(current, fullScale, alpha));
+
+	if (alpha < 1)
+	{
+		FTimerHandle scalingUp;
+		FTimerDelegate scalingDelegate;
+
+		scalingDelegate.BindUFunction(this, FName("FormationScaling"), Cast<AActor>(this)->GetActorScale3D(), fullScale, alpha + 0.05f);
+		GetWorld()->GetTimerManager().SetTimer(scalingUp, scalingDelegate, 0.025f, false);
+	}
 }
 
 void ABaseConstruct::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const 

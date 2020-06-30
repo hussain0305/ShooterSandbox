@@ -829,27 +829,3 @@ void AShooterSandboxCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProper
 
 	DOREPLIFETIME(AShooterSandboxCharacter, myEnergyPack);
 }
-
-//
-//PlayerInputComponent->BindAction("Jetpack", IE_Pressed, this, &AShooterSandboxCharacter::ToggleJetpackOn);
-//PlayerInputComponent->BindAction("Jetpack", IE_Released, this, &AShooterSandboxCharacter::ToggleJetpackOff);
-//
-//void AShooterSandboxCharacter::ToggleJetpackOn()
-//{
-//	if (GetWorld())
-//	{
-//		jetpackActive = true;
-//		Jetpack();
-//		GetWorld()->GetTimerManager().SetTimer(jetpack, this, &AShooterSandboxCharacter::Jetpack, 1.f, true);
-//	}
-//}
-//
-//void AShooterSandboxCharacter::ToggleJetpackOff()
-//{
-//	jetpackActive = false;
-//	if (jetpack.IsValid())
-//	{
-//		GetWorldTimerManager().ClearTimer(jetpack);
-//		jetpack.Invalidate();
-//	}
-//}

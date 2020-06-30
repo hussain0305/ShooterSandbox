@@ -50,11 +50,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool shouldForm;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Destruction")
+	float destructionExplosionStrength;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Destruction")
+	TSubclassOf<class AEConstructDestruction> destructionBP;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Destruction")
+	float scaleFactor = 1;
+
 //=#=#=#=#= FUNCTIONS =#=#=#=#=
 
 	virtual void BeginPlay() override;
-
-	virtual void Tick(float DeltaTime) override;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser) override;
 
@@ -63,6 +70,9 @@ public:
 	class AShooterSandboxController* GetConstructedBy();
 
 	virtual void DestroyConstruct();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_DestroyConstruct();
 
 	UFUNCTION(BlueprintCallable, Category = "Materials")
 	void RefreshAppearance();

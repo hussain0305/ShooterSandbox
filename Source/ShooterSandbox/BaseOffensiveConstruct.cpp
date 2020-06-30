@@ -5,6 +5,7 @@
 #include "Camera/CameraComponent.h"
 #include "ShooterSandboxController.h"
 #include "ShooterSandboxCharacter.h"
+#include "EConstructDestruction.h"
 #include "AShooterSandboxHUD.h"
 #include "ShooterProjectile.h"
 #include "ShooterSandboxGlobal.h"
@@ -23,7 +24,8 @@ ABaseOffensiveConstruct::ABaseOffensiveConstruct()
 	bUseControllerRotationYaw = false;//true
 	bUseControllerRotationRoll = false;
 
-	SetRootComponent(CreateDefaultSubobject<USceneComponent>(TEXT("ConstructRoot")));
+	rootComp = CreateDefaultSubobject<USceneComponent>(TEXT("ConstructRoot"));
+	SetRootComponent(rootComp);
 
 	baseOrientation = CreateDefaultSubobject<USceneComponent>(TEXT("BaseOrientation"));
 	baseOrientation->SetupAttachment(GetRootComponent());
@@ -146,10 +148,17 @@ void ABaseOffensiveConstruct::OnOverlapEnded(UPrimitiveComponent * OverlappedCom
 
 void ABaseOffensiveConstruct::DestroyConstruct()
 {
-	if (Role < ROLE_Authority) {
+	if (Role < ROLE_Authority)
+	{
 		return;
 	}
+
 	Server_LeaveOffensive();
+
+	if (destructionBP)
+	{
+		Multicast_DestroyConstruct();
+	}
 
 	Destroy(this);
 }

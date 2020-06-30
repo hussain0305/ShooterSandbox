@@ -34,6 +34,9 @@ protected:
 	int recoilCount;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Recoil")
+	class USceneComponent* rootComp;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Recoil")
 	int shootRecoilFrames = 45;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Recoil")

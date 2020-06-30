@@ -7,6 +7,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Components/StaticMeshComponent.h"
 #include "TimerManager.h"
+#include "EConstructDestruction.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -22,13 +23,6 @@ void ABaseConstruct::BeginPlay()
 	health = maxHealth;
 
 	RefreshAppearance();
-}
-
-// Called every frame
-void ABaseConstruct::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
 }
 
 float ABaseConstruct::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
@@ -63,16 +57,38 @@ AShooterSandboxController* ABaseConstruct::GetConstructedBy()
 
 void ABaseConstruct::DestroyConstruct()
 {
-	if (Role < ROLE_Authority) {
+	if (Role < ROLE_Authority)
+	{
 		return;
+	}
+
+	if (destructionBP)
+	{
+		Multicast_DestroyConstruct();
 	}
 
 	Destroy(this);
 }
 
+void ABaseConstruct::Multicast_DestroyConstruct_Implementation()
+{
+	TArray<UStaticMeshComponent*> allStaticMeshes;
+	Cast<AActor>(this)->GetComponents<UStaticMeshComponent>(allStaticMeshes);
+
+	FActorSpawnParameters spawnParams;
+	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	AEConstructDestruction* spawnedDestruction = GetWorld()->SpawnActor<AEConstructDestruction>(destructionBP,
+		GetActorLocation() + allStaticMeshes[0]->GetRelativeLocation(),
+		GetActorRotation(), spawnParams);
+
+	spawnedDestruction->DestroyConstruct(allStaticMeshes[0]->GetRelativeScale3D(), Cast<UMaterialInstance>(allStaticMeshes[0]->GetMaterial(0)), destructionExplosionStrength, scaleFactor);
+
+}
+
 void ABaseConstruct::RefreshAppearance()
 {
-	if (shouldForm)
+	if (shouldForm && Role == ROLE_Authority)
 	{
 		FormationScaling(FVector(0, 0, 0), Cast<AActor>(this)->GetActorScale3D(), 0.0f);
 	}

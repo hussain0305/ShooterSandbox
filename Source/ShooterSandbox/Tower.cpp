@@ -5,7 +5,8 @@
 
 ATower::ATower()
 {
-	SetRootComponent(CreateDefaultSubobject<USceneComponent>(TEXT("ConstructRoot")));
+	rootComp = CreateDefaultSubobject<USceneComponent>(TEXT("ConstructRoot"));
+	SetRootComponent(rootComp);
 
 	towerBase = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Tower Base"));
 	towerBase->SetupAttachment(GetRootComponent());

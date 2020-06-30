@@ -18,6 +18,9 @@ public:
 	
 	ATower();
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Recoil")
+	class USceneComponent* rootComp;
+
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* towerBase;
 	

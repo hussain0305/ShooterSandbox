@@ -187,28 +187,20 @@ void AShooterSandboxGameMode::Temp_PrintLog()
 
 FRotator AShooterSandboxGameMode::GetAlignedRotation(FRotator rawRotation)
 {
-	int aligner = (int)rawRotation.Vector().Y % 45;
-
-	float y = rawRotation.Yaw;
-
-	if (y < -45 && y > -135) {
-		UKismetSystemLibrary::PrintString(this, (TEXT("A")));
-		y = -90;
+	if (rawRotation.Yaw < -45 && rawRotation.Yaw > -135)
+	{
+		return FRotator(rawRotation.Pitch, -90, rawRotation.Roll);
 	}
-	else if (y > 45 && y < 135) {
-		UKismetSystemLibrary::PrintString(this, (TEXT("B")));
-		y = 90;
+	else if (rawRotation.Yaw > 45 && rawRotation.Yaw < 135)
+	{
+		return FRotator(rawRotation.Pitch, 90, rawRotation.Roll);
 	}
 
-	else if (y > -45 && y < 45) {
-		UKismetSystemLibrary::PrintString(this, (TEXT("C")));
-		y = 0;
+	else if (rawRotation.Yaw > -45 && rawRotation.Yaw < 45)
+	{
+		return FRotator(rawRotation.Pitch, 0, rawRotation.Roll);
 	}
 
-	else {
-		UKismetSystemLibrary::PrintString(this, (TEXT("D")));
-		y = 179;
-	}
+	return FRotator(rawRotation.Pitch, 179.5f, rawRotation.Roll);
 
-	return FRotator(rawRotation.Pitch, y, rawRotation.Roll);
 }

@@ -229,6 +229,10 @@ void AShooterSandboxCharacter::ToggleRunOn()
 		return;
 	}
 
+	if (bIsFiringWeapon) {
+		return;
+	}
+
 	bIsRunning = true;
 
 	GetCharacterMovement()->MaxWalkSpeed = RUN_MULTIPLIER * walkSpeed;
@@ -250,8 +254,7 @@ void AShooterSandboxCharacter::ToggleRunOff()
 
 void AShooterSandboxCharacter::ToggleRunCamShake(bool startShake)
 {
-	if(!myController)
-	{
+	if(!myController){
 		return;
 	}
 
@@ -326,8 +329,7 @@ void AShooterSandboxCharacter::Jetpack_Implementation()
 
 void AShooterSandboxCharacter::MouseWheelDown()
 {
-	if (!myController)
-	{
+	if (!myController){
 		return;
 	}
 
@@ -336,8 +338,7 @@ void AShooterSandboxCharacter::MouseWheelDown()
 
 void AShooterSandboxCharacter::MouseWheelUp()
 {
-	if (!myController)
-	{
+	if (!myController){
 		return;
 	}
 
@@ -346,8 +347,7 @@ void AShooterSandboxCharacter::MouseWheelUp()
 
 bool AShooterSandboxCharacter::GetSpawnLocationAndRotation(FVector &spawnLocation, FRotator &spawnRotation, class AConstructibleSurface* &surfaceToSpawnOn, TSubclassOf<class ABaseConstruct> construct)
 {
-	if (!GetWorld())
-	{
+	if (!GetWorld()){
 		return false;
 	}
 
@@ -752,18 +752,24 @@ void AShooterSandboxCharacter::Client_EnergyNotification_Implementation(const FS
 
 void AShooterSandboxCharacter::StartWeaponFire()
 {
-	if (!weaponCurrentlyHeld)
-	{
+	if (!weaponCurrentlyHeld){
 		return;
 	}
+
+	if (bIsRunning){
+		ToggleRunOff();
+	}
+
+	bIsFiringWeapon = true;
 
 	weaponCurrentlyHeld->StartShooting();
 }
 
 void AShooterSandboxCharacter::StopWeaponFire()
 {
-	if (!weaponCurrentlyHeld)
-	{
+	bIsFiringWeapon = false;
+
+	if (!weaponCurrentlyHeld){
 		return;
 	}
 
@@ -772,8 +778,7 @@ void AShooterSandboxCharacter::StopWeaponFire()
 
 void AShooterSandboxCharacter::WeaponAltMode()
 {
-	if (!weaponCurrentlyHeld)
-	{
+	if (!weaponCurrentlyHeld){
 		return;
 	}
 

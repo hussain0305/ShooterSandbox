@@ -38,6 +38,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	bool bHasWeapon = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	bool bIsFiringWeapon = false;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	bool jetpackActive = false;

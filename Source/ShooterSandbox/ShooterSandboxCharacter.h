@@ -149,9 +149,6 @@ public:
 	void StopWeaponFire();
 	void WeaponAltMode();
 
-	//UFUNCTION(Category = "Energy")
-	//void OnRep_EnergyChanged();
-
 	//************ RPC Functions ************
 
 	void AttemptControlOffensiveConstruct();

@@ -12,6 +12,8 @@ class SHOOTERSANDBOX_API ABaseWeapon : public AActor
 	GENERATED_BODY()
 	
 public:	
+
+	const float PLAYER_WALK_SPEED = 600;
 	// Sets default values for this actor's properties
 	ABaseWeapon();
 

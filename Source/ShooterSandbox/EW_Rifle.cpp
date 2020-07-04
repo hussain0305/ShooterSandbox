@@ -42,13 +42,14 @@ void AEW_Rifle::SpawnProjectile_Implementation()
 			spawnParams.Owner = GetOwner();
 			spawnParams.Instigator = Cast<AShooterSandboxCharacter>(GetOwner())->GetMyController()->GetPawn();
 
-			AShooterProjectile* spawnedProjectile = GetWorld()->SpawnActor<AShooterProjectile>(projectile, gunBody->GetSocketLocation(FName("Muzzle")), FRotator::ZeroRotator, spawnParams);
+			AShooterProjectile* spawnedProjectile = GetWorld()->SpawnActor<AShooterProjectile>(projectile, gunBody->GetSocketLocation(FName("Muzzle")), GetActorRotation(), spawnParams);
 
 			if (spawnedProjectile)
 			{
 				spawnedProjectile->SetShooterController(Cast<AShooterSandboxCharacter>(GetOwner())->GetMyController());
-				spawnedProjectile->FireInDirection(referenceCam->GetForwardVector());
-
+				
+				spawnedProjectile->FireInDirection(referenceCam->GetForwardVector() + (GetOwner()->GetVelocity().GetSafeNormal() * 0.04f));
+				
 				Cast<AShooterSandboxCharacter>(GetOwner())->Client_UpdateWeaponAmmo(currentClipSize, clipSize);
 
 				//userController->ClientPlayCameraShake(shotShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));

@@ -62,7 +62,7 @@ void AEW_Rifle::SpawnProjectile_Implementation()
 				
 				Cast<AShooterSandboxCharacter>(GetOwner())->Client_UpdateWeaponAmmo(currentClipSize, clipSize);
 
-				UGameplayStatics::SpawnEmitterAtLocation(this, bulletTrail, gunBody->GetSocketLocation(FName("Muzzle")), GetActorRotation());
+				//UGameplayStatics::SpawnEmitterAtLocation(this, bulletTrail, gunBody->GetSocketLocation(FName("Muzzle")), GetActorRotation());
 				//userController->ClientPlayCameraShake(shotShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
 			}
 

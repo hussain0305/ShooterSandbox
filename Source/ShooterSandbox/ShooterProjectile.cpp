@@ -34,13 +34,9 @@ void AShooterProjectile::BeginPlay()
 	Super::BeginPlay();
 	
 	CollisionComponent->OnComponentHit.AddDynamic(this, &AShooterProjectile::OnProjectileHit);
-}
 
-// Called every frame
-void AShooterProjectile::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
+	FTimerHandle countdownLife;
+	GetWorld()->GetTimerManager().SetTimer(countdownLife, this, &AShooterProjectile::DestroyProjectile, lifetime, false);
 }
 
 void AShooterProjectile::FireInDirection(FVector shootDirection)
@@ -72,6 +68,16 @@ void AShooterProjectile::OnProjectileHit(UPrimitiveComponent * HitComp, AActor *
 
 	if(destroyOnImpact)
 	{
-		Destroy(this);
+		DestroyProjectile();
 	}
+}
+
+bool AShooterProjectile::DestroyProjectile_Validate()
+{
+	return true;
+}
+
+void AShooterProjectile::DestroyProjectile_Implementation()
+{
+	Destroy(this);
 }

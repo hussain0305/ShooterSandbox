@@ -4,9 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
+#include "ShooterSandboxGlobal.h"
 #include "AShooterSandboxHUD.generated.h"
 
-enum class EConstructionMode : uint8;
+//enum class EConstructionMode : uint8;
+//enum class EMovementState : uint8;
 
 UCLASS()
 class SHOOTERSANDBOX_API AAShooterSandboxHUD : public AHUD
@@ -95,6 +97,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Turret Gun Controls")
 	void RemoveTurretModeSwitching();
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Turret Gun Controls")
+	void MovementModeCrosshairChange(EMovementState newState);
 
 protected:
 

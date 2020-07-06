@@ -30,10 +30,16 @@ public:
 	TSubclassOf<class AShooterProjectile> projectile;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UParticleSystem* bulletTrail;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int energyPerShot;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int clipSize;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float mobilityMultiplier;
 
 	int currentClipSize;
 

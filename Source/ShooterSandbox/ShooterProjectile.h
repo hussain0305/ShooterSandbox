@@ -21,15 +21,16 @@ protected:
 
 	class AShooterSandboxController* shooterController;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+public:
 
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
 	class USphereComponent* CollisionComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 	bool destroyOnImpact;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+	float lifetime;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 	int damage;
@@ -45,4 +46,7 @@ public:
 
 	UFUNCTION()
 	void OnProjectileHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void DestroyProjectile();
 };

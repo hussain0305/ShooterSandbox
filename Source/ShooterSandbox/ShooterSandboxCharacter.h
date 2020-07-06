@@ -164,6 +164,7 @@ protected:
 
 //=#=#=#=#= VARIABLES =#=#=#=#=
 	bool bIsRunning;
+	EMovementState previousMovementState;
 	EMovementState currentMovementState;
 
 	float walkSpeed;

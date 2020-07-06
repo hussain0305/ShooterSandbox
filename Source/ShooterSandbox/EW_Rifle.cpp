@@ -32,6 +32,16 @@ bool AEW_Rifle::SpawnProjectile_Validate()
 	return true;
 }
 
+//static UParticleSystemComponent * SpawnEmitterAtLocation
+//(
+//	UWorld * World,
+//	UParticleSystem * EmitterTemplate,
+//	const FTransform & SpawnTransform,
+//	bool bAutoDestroy,
+//	EPSCPoolMethod PoolingMethod,
+//	bool bAutoActivate
+//)
+
 void AEW_Rifle::SpawnProjectile_Implementation()
 {
 	if (Role == ROLE_Authority && GetWorld() && projectile && referenceCam)
@@ -48,10 +58,11 @@ void AEW_Rifle::SpawnProjectile_Implementation()
 			{
 				spawnedProjectile->SetShooterController(Cast<AShooterSandboxCharacter>(GetOwner())->GetMyController());
 				
-				spawnedProjectile->FireInDirection(referenceCam->GetForwardVector() + (GetOwner()->GetVelocity().GetSafeNormal() * 0.04f));
+				spawnedProjectile->FireInDirection(referenceCam->GetForwardVector() + (GetOwner()->GetVelocity().GetSafeNormal() * mobilityMultiplier));
 				
 				Cast<AShooterSandboxCharacter>(GetOwner())->Client_UpdateWeaponAmmo(currentClipSize, clipSize);
 
+				UGameplayStatics::SpawnEmitterAtLocation(this, bulletTrail, gunBody->GetSocketLocation(FName("Muzzle")), GetActorRotation());
 				//userController->ClientPlayCameraShake(shotShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
 			}
 

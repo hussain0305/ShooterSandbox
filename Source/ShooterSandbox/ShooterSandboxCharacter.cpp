@@ -192,6 +192,15 @@ void AShooterSandboxCharacter::MonitorMovementState()
 	{
 		SetCurrentEMovementState(EMovementState::Running);
 	}
+
+	if (previousMovementState != currentMovementState)
+	{
+		if (myHUD && bHasWeapon)
+		{
+			myHUD->MovementModeCrosshairChange(currentMovementState);
+		}
+		previousMovementState = currentMovementState;
+	}
 }
 
 void AShooterSandboxCharacter::SetCurrentEMovementState(EMovementState newState)
@@ -688,16 +697,16 @@ void AShooterSandboxCharacter::Multicast_PickupOrDropWeapon_Implementation(ABase
 
 	else
 	{
-		//when will a player drop weapons?
-		//1. they can consume its remaining energy
-		//2. or they can run out of energy/ammo in the gun
-		//no "dropping" weapons
-		//in both cases, weapon will be destroyed on server, do NOT destroy here
-
 		weaponCurrentlyHeld->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		//weaponCurrentlyHeld->DestroyWeapon();
 		weaponCurrentlyHeld = nullptr;
 		bHasWeapon = false;
+
+		if (myHUD)
+		{
+			myHUD->MovementModeCrosshairChange(EMovementState::Stationary);
+		}
+
 	}
 }
 

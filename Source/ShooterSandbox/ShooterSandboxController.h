@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "ShooterSandboxGlobal.h"
 #include "ShooterSandboxController.generated.h"
 
 /**
@@ -29,6 +30,9 @@ public:
 	
 	UFUNCTION(Client, reliable, BlueprintCallable, Category = "Player HUD")
 	void ProxyForHUD_AlertMessage(const FString& message, int greenRedNeut);
+
+	UFUNCTION(Client, reliable, BlueprintCallable, Category = "Player HUD")
+	void ProxyForHUD_ByCommandCode(EHUDCommandType commandType);
 
 	void OpenScorecard();
 	void CloseScorecard();

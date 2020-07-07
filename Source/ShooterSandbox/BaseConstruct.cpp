@@ -35,10 +35,12 @@ float ABaseConstruct::TakeDamage(float DamageAmount, FDamageEvent const & Damage
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
 	health -= DamageAmount;
+	Cast<AShooterSandboxController>(EventInstigator)->ProxyForHUD_ByCommandCode(EHUDCommandType::SuccessfulHit);
 
 	if (health < 0)
 	{
 		Cast<AShooterSandboxPlayerState>(EventInstigator->PlayerState)->HasBrokenConstruct(maxHealth);
+		Cast<AShooterSandboxController>(EventInstigator)->ProxyForHUD_ByCommandCode(EHUDCommandType::PlayHitAnimation);
 		DestroyConstruct();
 	}
 

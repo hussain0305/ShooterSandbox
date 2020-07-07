@@ -98,8 +98,11 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Turret Gun Controls")
 	void RemoveTurretModeSwitching();
 
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Turret Gun Controls")
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Crosshair Controls")
 	void MovementModeCrosshairChange(EMovementState newState);
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Crosshair Controls")
+	void ExecuteHUDActionByCommandCode(EHUDCommandType commandType);
 
 protected:
 

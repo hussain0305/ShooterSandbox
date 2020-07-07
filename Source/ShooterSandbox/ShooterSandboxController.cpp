@@ -68,6 +68,11 @@ void AShooterSandboxController::ProxyForHUD_AlertMessage_Implementation(const FS
 	Cast<AAShooterSandboxHUD>(GetHUD())->ShowAlertMessage(message, greenRedNeut);
 }
 
+void AShooterSandboxController::ProxyForHUD_ByCommandCode_Implementation(EHUDCommandType commandType)
+{
+	Cast<AAShooterSandboxHUD>(GetHUD())->ExecuteHUDActionByCommandCode(commandType);
+}
+
 void AShooterSandboxController::OpenScorecard()
 {
 	Cast<AAShooterSandboxHUD>(GetHUD())->ShowScorecard(true);

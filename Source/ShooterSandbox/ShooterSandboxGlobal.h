@@ -37,6 +37,13 @@ enum class EConstructionMode : uint8 {
 	Wall			UMETA(DisplayName = "Wall")
 };
 
+UENUM(BlueprintType)
+enum class EHUDCommandType : uint8 {
+	PlayHitAnimation			UMETA(DisplayName = "PlayHitAnimation"),
+	PlayKillAnimation			UMETA(DisplayName = "PlayKillAnimation"),
+	SuccessfulHit				UMETA(DisplayName = "SuccessfulHit")
+};
+
 USTRUCT(BlueprintType)
 struct FConstructsDatabase : public FTableRowBase
 {

@@ -4,6 +4,7 @@
 #include "EW_Rifle.h"
 #include "ShooterSandboxCharacter.h"
 #include "ShooterSandboxController.h"
+#include "ShooterSandboxGlobal.h"
 #include "ShooterProjectile.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
@@ -11,11 +12,21 @@
 
 void AEW_Rifle::StartShooting()
 {
-	GetWorld()->GetTimerManager().SetTimer(sprayTimer, this, &AEW_Rifle::SpawnProjectile, 0.33f, true);
+	if (weilderController)
+	{
+		weilderController->ClientPlayCameraShake(shotShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(sprayTimer, this, &AEW_Rifle::SpawnProjectile, 0.1f, true);
 }
 
 void AEW_Rifle::StopShooting()
 {
+	if (weilderController)
+	{
+		weilderController->ClientStopCameraShake(shotShake, true);
+	}
+
 	if (sprayTimer.IsValid())
 	{
 		GetWorldTimerManager().ClearTimer(sprayTimer);
@@ -32,16 +43,6 @@ bool AEW_Rifle::SpawnProjectile_Validate()
 	return true;
 }
 
-//static UParticleSystemComponent * SpawnEmitterAtLocation
-//(
-//	UWorld * World,
-//	UParticleSystem * EmitterTemplate,
-//	const FTransform & SpawnTransform,
-//	bool bAutoDestroy,
-//	EPSCPoolMethod PoolingMethod,
-//	bool bAutoActivate
-//)
-
 void AEW_Rifle::SpawnProjectile_Implementation()
 {
 	if (Role == ROLE_Authority && GetWorld() && projectile && referenceCam)
@@ -56,20 +57,46 @@ void AEW_Rifle::SpawnProjectile_Implementation()
 
 			if (spawnedProjectile)
 			{
-				spawnedProjectile->SetShooterController(Cast<AShooterSandboxCharacter>(GetOwner())->GetMyController());
-				
-				spawnedProjectile->FireInDirection(referenceCam->GetForwardVector() + (GetOwner()->GetVelocity().GetSafeNormal() * mobilityMultiplier));
-				
-				Cast<AShooterSandboxCharacter>(GetOwner())->Client_UpdateWeaponAmmo(currentClipSize, clipSize);
+				switch (weilderCharacter->GetCurrentEMovementState())
+				{
+				case EMovementState::Stationary:
+					gunRecoilOffset = FVector(FMath::RandRange(-recoil_Stationary, recoil_Stationary),
+						FMath::RandRange(-recoil_Stationary, recoil_Stationary),
+						FMath::RandRange(-recoil_Stationary, recoil_Stationary));
+					break;
 
+				case EMovementState::Walking:
+					gunRecoilOffset = FVector(FMath::RandRange(-recoil_Walking, recoil_Walking),
+						FMath::RandRange(-recoil_Walking, recoil_Walking),
+						FMath::RandRange(-recoil_Walking, recoil_Walking));
+					break;
+
+				case EMovementState::Running:
+					gunRecoilOffset = FVector(FMath::RandRange(-recoil_Running, recoil_Running),
+						FMath::RandRange(-recoil_Running, recoil_Running),
+						FMath::RandRange(-recoil_Running, recoil_Running));
+					break;
+
+				case EMovementState::Jumping:
+					gunRecoilOffset = FVector(FMath::RandRange(-recoil_Jumping, recoil_Jumping),
+						FMath::RandRange(-recoil_Jumping, recoil_Jumping),
+						FMath::RandRange(-recoil_Jumping, recoil_Jumping));
+					break;
+
+				}
+
+				spawnedProjectile->SetShooterController(weilderController);
+				spawnedProjectile->FireInDirection(referenceCam->GetForwardVector() + gunRecoilOffset);
+				
+				weilderCharacter->Client_UpdateWeaponAmmo(currentClipSize, clipSize);
+				
 				//UGameplayStatics::SpawnEmitterAtLocation(this, bulletTrail, gunBody->GetSocketLocation(FName("Muzzle")), GetActorRotation());
-				//userController->ClientPlayCameraShake(shotShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
 			}
 
 			if (currentClipSize == 0)
 			{
-				Cast<AShooterSandboxCharacter>(GetOwner())->Multicast_PickupOrDropWeapon(nullptr);
-				Cast<AShooterSandboxCharacter>(GetOwner())->Client_PickupOrDropWeapon(false);
+				weilderCharacter->Multicast_PickupOrDropWeapon(nullptr);
+				weilderCharacter->Client_PickupOrDropWeapon(false);
 				DestroyWeapon();
 			}
 		}

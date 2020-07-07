@@ -18,7 +18,7 @@ public:
 	ABaseWeapon();
 
 protected:
-	// Called when the game starts or when spawned
+	// Called when the game starts or when spawnedTSubclassOf<class UCameraShake> shotShake;
 	virtual void BeginPlay() override;
 
 public:	
@@ -33,6 +33,9 @@ public:
 	UParticleSystem* bulletTrail;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<class UCameraShake> shotShake;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int energyPerShot;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -43,8 +46,25 @@ public:
 
 	int currentClipSize;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
+	float recoil_Stationary;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
+	float recoil_Walking;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
+	float recoil_Running;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
+	float recoil_Jumping;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	class UCameraComponent* referenceCam;
+
+	class AShooterSandboxController* weilderController;
+	class AShooterSandboxCharacter* weilderCharacter;
+
+	FVector gunRecoilOffset;
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon Controls")//Server, Reliable, WithValidation, 
 	virtual void StartShooting();
@@ -63,5 +83,8 @@ public:
 
 	//UFUNCTION(NetMulticast, Reliable, WithValidation, BlueprintCallable, Category = "Weapon Controls")
 	void WasPickedUpBy(class AShooterSandboxCharacter* pickerCharacter);
+
+	UFUNCTION(Client, Reliable, WithValidation)
+	void Client_WasPickedUpBy(class AShooterSandboxController* pickerController);
 
 };

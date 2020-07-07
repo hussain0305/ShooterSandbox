@@ -64,7 +64,22 @@ void ABaseWeapon::WasPickedUpBy(AShooterSandboxCharacter * pickerCharacter)//_Im
 {
 	//Probably needs to be multicast if damage and kills dont register on all clients
 	SetOwner(pickerCharacter);
-	referenceCam = Cast<AShooterSandboxCharacter>(pickerCharacter)->GetFollowCamera();
+
+	weilderCharacter = pickerCharacter;
+	referenceCam = weilderCharacter->GetFollowCamera();
+
+	weilderController = Cast<AShooterSandboxController>(pickerCharacter->GetController());
+	Client_WasPickedUpBy(weilderController);
+}
+
+bool ABaseWeapon::Client_WasPickedUpBy_Validate(AShooterSandboxController * pickerController)
+{
+	return true;
+}
+
+void ABaseWeapon::Client_WasPickedUpBy_Implementation(AShooterSandboxController * pickerController)
+{
+	weilderController = pickerController;
 }
 
 bool ABaseWeapon::DestroyWeapon_Validate()
@@ -74,6 +89,11 @@ bool ABaseWeapon::DestroyWeapon_Validate()
 
 void ABaseWeapon::DestroyWeapon_Implementation()
 {
+	if (weilderController)
+	{
+		weilderController->ClientStopCameraShake(shotShake, true);
+	}
+
 	Destroy();
 }
 

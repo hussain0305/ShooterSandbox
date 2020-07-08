@@ -53,41 +53,19 @@ void AEW_Rifle::SpawnProjectile_Implementation()
 			spawnParams.Owner = GetOwner();
 			spawnParams.Instigator = Cast<AShooterSandboxCharacter>(GetOwner())->GetMyController()->GetPawn();
 
-			AShooterProjectile* spawnedProjectile = GetWorld()->SpawnActor<AShooterProjectile>(projectile, gunBody->GetSocketLocation(FName("Muzzle")), GetActorRotation(), spawnParams);
+			FVector muzzlePos = gunBody->GetSocketLocation(FName("Muzzle"));
+			FVector shootDirec = referenceCam->GetForwardVector() + gunRecoilOffset;
+			PerformGunRecoil();
+
+			AShooterProjectile* spawnedProjectile = GetWorld()->SpawnActor<AShooterProjectile>(projectile, muzzlePos, GetActorRotation(), spawnParams);
 
 			if (spawnedProjectile)
 			{
-				switch (weilderCharacter->GetCurrentEMovementState())
-				{
-				case EMovementState::Stationary:
-					gunRecoilOffset = FVector(FMath::RandRange(-recoil_Stationary, recoil_Stationary),
-						FMath::RandRange(-recoil_Stationary, recoil_Stationary),
-						FMath::RandRange(-recoil_Stationary, recoil_Stationary));
-					break;
-
-				case EMovementState::Walking:
-					gunRecoilOffset = FVector(FMath::RandRange(-recoil_Walking, recoil_Walking),
-						FMath::RandRange(-recoil_Walking, recoil_Walking),
-						FMath::RandRange(-recoil_Walking, recoil_Walking));
-					break;
-
-				case EMovementState::Running:
-					gunRecoilOffset = FVector(FMath::RandRange(-recoil_Running, recoil_Running),
-						FMath::RandRange(-recoil_Running, recoil_Running),
-						FMath::RandRange(-recoil_Running, recoil_Running));
-					break;
-
-				case EMovementState::Jumping:
-					gunRecoilOffset = FVector(FMath::RandRange(-recoil_Jumping, recoil_Jumping),
-						FMath::RandRange(-recoil_Jumping, recoil_Jumping),
-						FMath::RandRange(-recoil_Jumping, recoil_Jumping));
-					break;
-
-				}
-
 				spawnedProjectile->SetShooterController(weilderController);
-				spawnedProjectile->FireInDirection(referenceCam->GetForwardVector() + gunRecoilOffset);
+				spawnedProjectile->FireInDirection(shootDirec);
 				
+				Multicast_SpawnProjectile(shootDirec, muzzlePos, GetActorRotation());
+
 				weilderCharacter->Client_UpdateWeaponAmmo(currentClipSize, clipSize);
 				
 				//UGameplayStatics::SpawnEmitterAtLocation(this, bulletTrail, gunBody->GetSocketLocation(FName("Muzzle")), GetActorRotation());

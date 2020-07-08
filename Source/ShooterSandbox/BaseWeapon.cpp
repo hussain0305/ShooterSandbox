@@ -3,6 +3,7 @@
 
 #include "BaseWeapon.h"
 #include "Engine/SkeletalMesh.h"
+#include "ShooterProjectile.h"
 #include "ShooterSandboxCharacter.h"
 #include "ShooterSandboxController.h"
 #include "Net/UnrealNetwork.h"
@@ -29,6 +30,38 @@ void ABaseWeapon::BeginPlay()
 	Super::BeginPlay();
 	
 	currentClipSize = clipSize;
+}
+
+void ABaseWeapon::PerformGunRecoil()
+{
+	switch (weilderCharacter->GetCurrentEMovementState())
+	{
+	case EMovementState::Stationary:
+		gunRecoilOffset = FVector(FMath::RandRange(-recoil_Stationary, recoil_Stationary),
+			FMath::RandRange(-recoil_Stationary, recoil_Stationary),
+			FMath::RandRange(-recoil_Stationary, recoil_Stationary));
+		break;
+
+	case EMovementState::Walking:
+		gunRecoilOffset = FVector(FMath::RandRange(-recoil_Walking, recoil_Walking),
+			FMath::RandRange(-recoil_Walking, recoil_Walking),
+			FMath::RandRange(-recoil_Walking, recoil_Walking));
+		break;
+
+	case EMovementState::Running:
+		gunRecoilOffset = FVector(FMath::RandRange(-recoil_Running, recoil_Running),
+			FMath::RandRange(-recoil_Running, recoil_Running),
+			FMath::RandRange(-recoil_Running, recoil_Running));
+		break;
+
+	case EMovementState::Jumping:
+		gunRecoilOffset = FVector(FMath::RandRange(-recoil_Jumping, recoil_Jumping),
+			FMath::RandRange(-recoil_Jumping, recoil_Jumping),
+			FMath::RandRange(-recoil_Jumping, recoil_Jumping));
+		break;
+
+	}
+
 }
 
 void ABaseWeapon::StartShooting()
@@ -70,6 +103,26 @@ void ABaseWeapon::WasPickedUpBy(AShooterSandboxCharacter * pickerCharacter)//_Im
 
 	weilderController = Cast<AShooterSandboxController>(pickerCharacter->GetController());
 	Client_WasPickedUpBy(weilderController);
+}
+
+bool ABaseWeapon::Multicast_SpawnProjectile_Validate(FVector shootDirection, FVector shootPosition, FRotator directionRotation)
+{
+	return true;
+}
+
+void ABaseWeapon::Multicast_SpawnProjectile_Implementation(FVector shootDirection, FVector shootPosition, FRotator directionRotation)
+{
+	if (Role == ROLE_Authority)
+	{
+		//Already Spawned on server, don't again
+		return;
+	}
+
+	FActorSpawnParameters spawnParams;
+	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	AShooterProjectile* spawnedProjectile = GetWorld()->SpawnActor<AShooterProjectile>(projectile, shootPosition, directionRotation, spawnParams);
+	spawnedProjectile->FireInDirection(shootDirection);
 }
 
 bool ABaseWeapon::Client_WasPickedUpBy_Validate(AShooterSandboxController * pickerController)

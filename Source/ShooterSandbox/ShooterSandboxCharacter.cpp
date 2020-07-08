@@ -690,6 +690,11 @@ void AShooterSandboxCharacter::Multicast_PickupOrDropWeapon_Implementation(ABase
 {
 
 	if (theWeapon) {
+		if (HasAuthority() && weaponCurrentlyHeld)
+		{
+			weaponCurrentlyHeld->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			weaponCurrentlyHeld->DestroyWeapon();
+		}
 		weaponCurrentlyHeld = theWeapon;
 		weaponCurrentlyHeld->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("WeaponHolder"));
 		bHasWeapon = true;	

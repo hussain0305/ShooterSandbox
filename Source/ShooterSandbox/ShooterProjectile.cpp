@@ -36,7 +36,16 @@ void AShooterProjectile::BeginPlay()
 	CollisionComponent->OnComponentHit.AddDynamic(this, &AShooterProjectile::OnProjectileHit);
 
 	FTimerHandle countdownLife;
-	GetWorld()->GetTimerManager().SetTimer(countdownLife, this, &AShooterProjectile::DestroyProjectile, lifetime, false);
+	if (HasAuthority())
+	{
+		//UKismetSystemLibrary::PrintString(this, (TEXT("Server destru ")));
+		GetWorld()->GetTimerManager().SetTimer(countdownLife, this, &AShooterProjectile::DestroyProjectile, lifetime, false);
+	}
+	else
+	{
+		//UKismetSystemLibrary::PrintString(this, (TEXT("LOCAL DESTRUCTION")));
+		GetWorld()->GetTimerManager().SetTimer(countdownLife, this, &AShooterProjectile::Local_DestroyProjectile, lifetime, false);
+	}
 }
 
 void AShooterProjectile::FireInDirection(FVector shootDirection)
@@ -58,6 +67,11 @@ void AShooterProjectile::OnProjectileHit(UPrimitiveComponent * HitComp, AActor *
 {
 	if (!HasAuthority())
 	{
+		if (destroyOnImpact)
+		{
+			Local_DestroyProjectile();
+		}
+
 		return;
 	}
 
@@ -70,6 +84,11 @@ void AShooterProjectile::OnProjectileHit(UPrimitiveComponent * HitComp, AActor *
 	{
 		DestroyProjectile();
 	}
+}
+
+void AShooterProjectile::Local_DestroyProjectile()
+{
+	Destroy(this);
 }
 
 bool AShooterProjectile::DestroyProjectile_Validate()

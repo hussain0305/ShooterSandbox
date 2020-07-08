@@ -66,6 +66,8 @@ public:
 
 	FVector gunRecoilOffset;
 
+	void PerformGunRecoil();
+
 	UFUNCTION(BlueprintCallable, Category = "Weapon Controls")//Server, Reliable, WithValidation, 
 	virtual void StartShooting();
 
@@ -87,4 +89,6 @@ public:
 	UFUNCTION(Client, Reliable, WithValidation)
 	void Client_WasPickedUpBy(class AShooterSandboxController* pickerController);
 
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+	void Multicast_SpawnProjectile(FVector shootDirection, FVector shootPosition, FRotator directionRotation);
 };

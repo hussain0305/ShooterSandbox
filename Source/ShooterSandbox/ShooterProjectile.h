@@ -49,4 +49,7 @@ public:
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void DestroyProjectile();
+
+
+	void Local_DestroyProjectile();
 };

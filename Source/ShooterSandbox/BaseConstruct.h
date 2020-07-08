@@ -17,7 +17,7 @@ public:
 
 protected:
 
-//=#=#=#=#= VARIABLES =#=#=#=#=
+//=#=#=#=#= EDITABLE IN BLUEPRINTS =#=#=#=#=
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	int maxHealth;
@@ -30,7 +30,7 @@ protected:
 
 public:	
 
-//=#=#=#=#= VARIABLES =#=#=#=#=
+//=#=#=#=#= EDITABLE IN BLUEPRINTS =#=#=#=#=
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool isGridAligned;
@@ -59,7 +59,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Destruction")
 	float scaleFactor = 1;
 
-//=#=#=#=#= FUNCTIONS =#=#=#=#=
+/**************************
+*       FUNCTIONS         *
+**************************/
 
 	virtual void BeginPlay() override;
 
@@ -71,12 +73,15 @@ public:
 
 	virtual void DestroyConstruct();
 
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_DestroyConstruct();
-
 	UFUNCTION(BlueprintCallable, Category = "Materials")
 	void RefreshAppearance();
 
 	UFUNCTION(Category = "Materials")
 	void FormationScaling(FVector current, FVector fullScale, float alpha);
+
+//=#=#=#=#= SERVER FUNCTIONS =#=#=#=#=
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_DestroyConstruct();
+
 };

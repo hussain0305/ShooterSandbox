@@ -11,24 +11,21 @@ class SHOOTERSANDBOX_API ABaseWeapon : public AActor
 {
 	GENERATED_BODY()
 	
+/**************************
+*       CONSTANTS         *
+**************************/
 public:	
-
 	const float PLAYER_WALK_SPEED = 600;
-	// Sets default values for this actor's properties
-	ABaseWeapon();
 
-protected:
-	// Called when the game starts or when spawnedTSubclassOf<class UCameraShake> shotShake;
-	virtual void BeginPlay() override;
+/**************************
+*       VARIABLES         *
+**************************/
 
-public:	
-
-	UPROPERTY(VisibleAnywhere)
-	USkeletalMeshComponent* gunBody;
+//=#=#=#=#= EDITABLE IN BLUEPRINTS =#=#=#=#=
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class AShooterProjectile> projectile;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UParticleSystem* bulletTrail;
 
@@ -44,8 +41,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float mobilityMultiplier;
 
-	int currentClipSize;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
 	float recoil_Stationary;
 
@@ -58,6 +53,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
 	float recoil_Jumping;
 
+//=#=#=#=#= OTHER VARIABLES =#=#=#=#=
+
+	int currentClipSize;
+
+	UPROPERTY(VisibleAnywhere)
+	USkeletalMeshComponent* gunBody;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	class UCameraComponent* referenceCam;
 
@@ -65,6 +67,16 @@ public:
 	class AShooterSandboxCharacter* weilderCharacter;
 
 	FVector gunRecoilOffset;
+
+/**************************
+*       FUNCTIONS         *
+**************************/
+
+//=#=#=#=#= INHERENT FUNCTIONS (1/2) =#=#=#=#=
+
+	ABaseWeapon();
+
+//=#=#=#=#= USING WEAPON =#=#=#=#=
 
 	void PerformGunRecoil();
 
@@ -83,12 +95,22 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void DestroyWeapon();
 
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+	void Multicast_SpawnProjectile(FVector shootDirection, FVector shootPosition, FRotator directionRotation);
+
+//=#=#=#=#= WEAPON OWNERSHIP =#=#=#=#=
+
 	//UFUNCTION(NetMulticast, Reliable, WithValidation, BlueprintCallable, Category = "Weapon Controls")
 	void WasPickedUpBy(class AShooterSandboxCharacter* pickerCharacter);
 
 	UFUNCTION(Client, Reliable, WithValidation)
 	void Client_WasPickedUpBy(class AShooterSandboxController* pickerController);
 
-	UFUNCTION(NetMulticast, Reliable, WithValidation)
-	void Multicast_SpawnProjectile(FVector shootDirection, FVector shootPosition, FRotator directionRotation);
+protected:
+
+//=#=#=#=#= INHERENT FUNCTIONS (2/2) =#=#=#=#=
+
+	// Called when the game starts or when spawnedTSubclassOf<class UCameraShake> shotShake;
+	virtual void BeginPlay() override;
+
 };

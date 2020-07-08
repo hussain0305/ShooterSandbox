@@ -688,13 +688,8 @@ bool AShooterSandboxCharacter::Multicast_PickupOrDropWeapon_Validate(ABaseWeapon
 
 void AShooterSandboxCharacter::Multicast_PickupOrDropWeapon_Implementation(ABaseWeapon* theWeapon)
 {
-
-	if (theWeapon) {
-		if (HasAuthority() && weaponCurrentlyHeld)
-		{
-			weaponCurrentlyHeld->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-			weaponCurrentlyHeld->DestroyWeapon();
-		}
+	if (theWeapon)
+	{
 		weaponCurrentlyHeld = theWeapon;
 		weaponCurrentlyHeld->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("WeaponHolder"));
 		bHasWeapon = true;	
@@ -762,6 +757,11 @@ void AShooterSandboxCharacter::Client_EnergyNotification_Implementation(const FS
 	{
 		myHUD->ShowAlertMessage(msg, greenRedNeut);
 	}
+}
+
+void AShooterSandboxCharacter::Client_SendAlertMessage_Implementation(const FString & msg)
+{
+	myHUD->ShowNotificationMessage(msg);
 }
 
 void AShooterSandboxCharacter::StartWeaponFire()

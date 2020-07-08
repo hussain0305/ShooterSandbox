@@ -36,29 +36,29 @@ void ABaseWeapon::PerformGunRecoil()
 {
 	switch (weilderCharacter->GetCurrentEMovementState())
 	{
-	case EMovementState::Stationary:
-		gunRecoilOffset = FVector(FMath::RandRange(-recoil_Stationary, recoil_Stationary),
-			FMath::RandRange(-recoil_Stationary, recoil_Stationary),
-			FMath::RandRange(-recoil_Stationary, recoil_Stationary));
-		break;
+		case EMovementState::Stationary:
+			gunRecoilOffset = FVector(FMath::RandRange(-recoil_Stationary, recoil_Stationary),
+				FMath::RandRange(-recoil_Stationary, recoil_Stationary),
+				FMath::RandRange(-recoil_Stationary, recoil_Stationary));
+			break;
 
-	case EMovementState::Walking:
-		gunRecoilOffset = FVector(FMath::RandRange(-recoil_Walking, recoil_Walking),
-			FMath::RandRange(-recoil_Walking, recoil_Walking),
-			FMath::RandRange(-recoil_Walking, recoil_Walking));
-		break;
+		case EMovementState::Walking:
+			gunRecoilOffset = FVector(FMath::RandRange(-recoil_Walking, recoil_Walking),
+				FMath::RandRange(-recoil_Walking, recoil_Walking),
+				FMath::RandRange(-recoil_Walking, recoil_Walking));
+			break;
 
-	case EMovementState::Running:
-		gunRecoilOffset = FVector(FMath::RandRange(-recoil_Running, recoil_Running),
-			FMath::RandRange(-recoil_Running, recoil_Running),
-			FMath::RandRange(-recoil_Running, recoil_Running));
-		break;
+		case EMovementState::Running:
+			gunRecoilOffset = FVector(FMath::RandRange(-recoil_Running, recoil_Running),
+				FMath::RandRange(-recoil_Running, recoil_Running),
+				FMath::RandRange(-recoil_Running, recoil_Running));
+			break;
 
-	case EMovementState::Jumping:
-		gunRecoilOffset = FVector(FMath::RandRange(-recoil_Jumping, recoil_Jumping),
-			FMath::RandRange(-recoil_Jumping, recoil_Jumping),
-			FMath::RandRange(-recoil_Jumping, recoil_Jumping));
-		break;
+		case EMovementState::Jumping:
+			gunRecoilOffset = FVector(FMath::RandRange(-recoil_Jumping, recoil_Jumping),
+				FMath::RandRange(-recoil_Jumping, recoil_Jumping),
+				FMath::RandRange(-recoil_Jumping, recoil_Jumping));
+			break;
 
 	}
 

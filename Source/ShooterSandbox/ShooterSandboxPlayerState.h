@@ -6,20 +6,27 @@
 #include "GameFramework/PlayerState.h"
 #include "ShooterSandboxPlayerState.generated.h"
 
-/**
- * 
- */
+
 UCLASS()
 class SHOOTERSANDBOX_API AShooterSandboxPlayerState : public APlayerState
 {
 	GENERATED_BODY()
 
+/***********************************
+*       INHERENT FUNCTIONS         *
+***********************************/
+
 public:
+	void BeginPlay() override;
+
+/**##**##**##**##**##**##**##*
+*       PLAYER STATS         *
+**##**##**##**##**##**##**##*/
+
+//=#=#=#=#= REPLICATED VARIABLES =#=#=#=#=
 
 	UPROPERTY(Replicated)
 	int playerNumber;
-
-	void BeginPlay() override;
 
 protected:
 
@@ -46,8 +53,12 @@ protected:
 	UPROPERTY(Replicated)
 	int deaths;
 
-
 public:
+
+
+/**************************
+*       FUNCTIONS         *
+**************************/
 
 	UFUNCTION(BlueprintCallable)
 	int TakeHealthDamage(int damageAmount);

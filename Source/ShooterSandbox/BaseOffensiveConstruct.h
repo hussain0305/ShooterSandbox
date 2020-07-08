@@ -15,7 +15,11 @@ class SHOOTERSANDBOX_API ABaseOffensiveConstruct : public ABaseConstruct
 
 protected:
 
-//=#=#=#=#= VARIABLES =#=#=#=#=
+/**************************
+*       VARIABLES         *
+**************************/
+
+//=#=#=#=#= REPLICATED AND STATE VARIABLES =#=#=#=#=
 
 	UPROPERTY(Transient, Replicated, BlueprintReadOnly)
 	class AShooterSandboxController* userController;
@@ -29,9 +33,9 @@ protected:
 	UPROPERTY(BlueprintReadWrite)
 	bool keepFiring = false;
 
-	//************ Recoil Related ************
-	
-	int recoilCount;
+public:
+
+//=#=#=#=#= EDITABLE IN BLUEPRINTS =#=#=#=#=
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Recoil")
 	class USceneComponent* rootComp;
@@ -45,18 +49,25 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Recoil")
 	float maxRecoilPerFrame = 10;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<class AShooterProjectile> projectile;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (ToolTip = "The function of this value depends on the construct's specific recoil implementation. Name might not be self-explanatory."))
+	FVector2D verticalRecoilRange;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (ToolTip = "The function of this value depends on the construct's specific recoil implementation. Name might not be self-explanatory."))
+	float sidewaysRecoilRange;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<class UTurretModeSwitchScreen> switchScreen;
+
+//=#=#=#=#= RECOIL =#=#=#=#=
+	
+	int recoilCount;
+
 	FTimerHandle recoilProcess;
 
-	virtual void CheckBeforeLeaving();
-
-public:
-	ABaseOffensiveConstruct();
-
-	void BeginPlay() override;
-
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-//=#=#=#=#= VARIABLES =#=#=#=#=
+//=#=#=#=#= ROTATION AND SETUP RELATED VARIABLES =#=#=#=#=
 
 	UPROPERTY(BlueprintReadWrite)
 	FVector2D totalRecoil;
@@ -65,8 +76,6 @@ public:
 	FRotator barrelPartDefaultRotation;
 
 	ETurretFireMode currentMode;
-
-	//************ Physical Setup ************
 
 	float rotatingPartLowerRotationLimit;
 	float rotatingPartUpperRotationLimit;
@@ -87,30 +96,27 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* barrel;
-	
+
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* barrelFulcrum;
 
 	UPROPERTY(VisibleAnywhere)
 	class USphereComponent* vicinity;
 
-	//************ Other Stuff ************
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<class AShooterProjectile> projectile;
+/**************************
+*       FUNCTIONS         *
+**************************/
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (ToolTip = "The function of this value depends on the construct's specific recoil implementation. Name might not be self-explanatory."))
-	FVector2D verticalRecoilRange;
+//=#=#=#=#= INHERENT FUNCTIONS =#=#=#=#=
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (ToolTip = "The function of this value depends on the construct's specific recoil implementation. Name might not be self-explanatory."))
-	float sidewaysRecoilRange;
+	ABaseOffensiveConstruct();
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TSubclassOf<class UTurretModeSwitchScreen> switchScreen;
+	void BeginPlay() override;
+
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
-//=#=#=#=#= FUNCTIONS =#=#=#=#=
-
-	//************ Turret Rotation Functions ************
+//=#=#=#=#= TURRET ROTATION FUNCTIONS =#=#=#=#=
 
 	void AddControllerPitchInputTo(float Val);
 	void AddControllerYawInputTo(float Val);
@@ -121,7 +127,7 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_AddControllerYawInputTo(float Val);
 
-	//************ Other Functions ************
+//=#=#=#=#= CONTROL AND USAGE FUNCTION =#=#=#=#=
 
 	UFUNCTION(BlueprintCallable, Category = "Offensive Construct Controls")//Server, Reliable, WithValidation, 
 	virtual void StartShooting();
@@ -141,6 +147,10 @@ public:
 	UFUNCTION(NetMulticast, Reliable, WithValidation, BlueprintCallable, Category = "Offensive Construct Controls")
 	void Multicast_LeaveOffensive();
 
+//=#=#=#=#= FUNCTIONS =#=#=#=#=
+
+	virtual void CheckBeforeLeaving();
+
 	UFUNCTION(BlueprintCallable)
 	void OnOverlapBegan(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
@@ -151,6 +161,7 @@ public:
 
 	FORCEINLINE bool GetIsBeingUsed() const { return isBeingUsed; }
 };
+
 
 //=#=#=#=#= CONSIDER IF THIS CAN BE INTEGRATED BACK IN THE BASE CLASS =#=#=#=#=
 

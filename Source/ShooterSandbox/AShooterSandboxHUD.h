@@ -7,6 +7,8 @@
 #include "ShooterSandboxGlobal.h"
 #include "AShooterSandboxHUD.generated.h"
 
+//SORT OUT GLOBAL FORWARD DECLARATION HERE
+
 //enum class EConstructionMode : uint8;
 //enum class EMovementState : uint8;
 
@@ -16,6 +18,11 @@ class SHOOTERSANDBOX_API AAShooterSandboxHUD : public AHUD
 	GENERATED_BODY()
 	
 public:
+
+/**************************
+*   INHERENT FUNCTIONS    *
+**************************/
+
 	AAShooterSandboxHUD();
 
 	/** Primary draw call for the HUD */
@@ -25,7 +32,13 @@ public:
 
 	void SetupHUD();
 
+/**************************
+*       VARIABLES         *
+**************************/
+
 	EConstructionMode currentConstructionMode;
+
+//=#=#=#=#= EDITABLE IN BLUEPRINTS =#=#=#=#=
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class UUserWidget* mainHUDWidget;
@@ -41,6 +54,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class UTurretModeSwitchScreen* turretModeSwitchingScreen;
+
+/**************************
+*       FUNCTIONS         *
+**************************/
 
 	UFUNCTION(BlueprintCallable)
 	void ToggleConstructionMenu();

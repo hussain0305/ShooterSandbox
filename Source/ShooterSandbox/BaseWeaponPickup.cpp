@@ -55,6 +55,11 @@ void ABaseWeaponPickup::OnOverlapBegan(UPrimitiveComponent * OverlappedComp, AAc
 
 	if (Cast<AShooterSandboxCharacter>(OtherActor))
 	{
+		if (Cast<AShooterSandboxCharacter>(OtherActor)->bHasWeapon)
+		{
+			Cast<AShooterSandboxCharacter>(OtherActor)->Client_SendAlertMessage("You already have a weapon, hoarder");
+			return;
+		}
 		spawnedWeapon->WasPickedUpBy(Cast<AShooterSandboxCharacter>(OtherActor));
 		Cast<AShooterSandboxCharacter>(OtherActor)->Multicast_PickupOrDropWeapon(spawnedWeapon);
 		Cast<AShooterSandboxCharacter>(OtherActor)->Client_PickupOrDropWeapon(true);

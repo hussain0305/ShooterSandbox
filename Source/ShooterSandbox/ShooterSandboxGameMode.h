@@ -12,20 +12,19 @@ class AShooterSandboxGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 public:
+
+/**************************
+*       VARIABLES         *
+**************************/
+
 	const int PULSE_ENERGY_AMOUNT = 15;
 	const int MAX_ENERGY_AMOUNT = 500;
-
-	AShooterSandboxGameMode();
 
 	FTimerHandle energyPulse;
 	FTimerHandle weaponSpawnRoutine;
 
-	void BeginPlay() override;
+//=#=#=#=#= EDITABLE IN BLUEPRINTS =#=#=#=#=
 
-//=#=#=#=#= FUNCTIONS =#=#=#=#=
-
-	void PostLogin(APlayerController* NewPlayer) override;
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
 	TSubclassOf<class AShooterSandboxCharacter> playerCharacterToSpawn;
 
@@ -37,6 +36,20 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pickups")
 	float pickupInterval = 5;
+
+/**************************
+*       FUNCTIONS         *
+**************************/
+
+//=#=#=#=#= INHERENT FUNCTIONS =#=#=#=#=
+
+	AShooterSandboxGameMode();
+
+	void BeginPlay() override;
+
+	void PostLogin(APlayerController* NewPlayer) override;
+
+//=#=#=#=#= GAMEPLAY FUNCTIONS =#=#=#=#=
 
 	void SpawnNewPickup();
 

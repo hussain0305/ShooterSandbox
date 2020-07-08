@@ -11,6 +11,10 @@ class SHOOTERSANDBOX_API AEnergyPack : public AActor
 {
 	GENERATED_BODY()
 	
+/***********************************
+*       INHERENT FUNCTIONS         *
+***********************************/
+
 public:	
 	// Sets default values for this actor's properties
 	AEnergyPack();
@@ -20,17 +24,20 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-
-//=#=#=#=#= VARIABLES =#=#=#=#=
-
 public:	
+
+/**************************
+*       VARIABLES         *
+**************************/
+
+//=#=#=#=#= STATE RELATED =#=#=#=#=
 
 	FTimerHandle packReactivation;
 
 	UPROPERTY(Replicated)
 	bool canBePicked;
 
-	//************ Physical Setup ************
+//=#=#=#=#= PHYSICAL SETUP =#=#=#=#=
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class UStaticMeshComponent* energyPackBody;
@@ -41,11 +48,11 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	class USphereComponent* vicinity;
 
-	//************ Other Stuff ************
 
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
+/**************************
+*       FUNCTIONS         *
+**************************/
+	
 	UFUNCTION(BlueprintCallable)
 	void SetCanBePicked();
 

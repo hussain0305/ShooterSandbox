@@ -14,6 +14,10 @@ class AShooterSandboxCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+/************************************
+*       INHERENT PROPERTIES         *
+************************************/
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
 
@@ -22,19 +26,23 @@ class AShooterSandboxCharacter : public ACharacter
 
 public:
 
-	AShooterSandboxCharacter();
 
 	const float BUILD_DISTANCE = 1500;
 	const float JETPACK_THRUST_COST = 10;
 
+	//This is always set in Multicast functions, no other replication needed
 	class ABaseWeapon* weaponCurrentlyHeld;
 
-//=#=#=#=#= VARIABLES =#=#=#=#=
+/********************************
+*       VARIABLES (1/2)         *
+********************************/
 
 	EConstructionMode currentConstructionMode;
 
 	FTimerHandle movementStateMonitoring;
 	FTimerHandle jetpack;
+
+//=#=#=#=#= EDITABLE IN BLUEPRINTS =#=#=#=#=
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	bool bHasWeapon = false;
@@ -60,7 +68,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	TSubclassOf<class UCameraShake> endRunCamShake;
 
-//=#=#=#=#= FUNCTIONS =#=#=#=#=
+/*******************************
+*       FUNCTIONS(1/2)         *
+*******************************/
+
+//=#=#=#=#= INHERENT FUNCTIONS =#=#=#=#=
+
+	AShooterSandboxCharacter();
 
 	virtual void BeginPlay() override;
 
@@ -68,7 +82,7 @@ public:
 
 	void FetchPersistentComponents();
 
-	//************ Movement State Functions ************
+//=#=#=#=#= MOVEMENT STATE FUNCTIONS =#=#=#=#=
 
 	void MonitorMovementState();
 
@@ -76,13 +90,16 @@ public:
 
 	EMovementState GetCurrentEMovementState();
 
-	//************ Construction Related Functions ************
+//=#=#=#=#= CONSTRUCTION FUNCTIONS =#=#=#=#=
 
 	void MouseWheelDown();
 	void MouseWheelUp();
 
 	UFUNCTION(BlueprintCallable, Category = "HUD")
 	void ToggleConstructionMenu();
+
+	UFUNCTION(BlueprintCallable, Category = "Construction")
+	void SwitchConstructionMode();
 
 	UFUNCTION(BlueprintCallable, Category = "Construction")
 	void TryConstruct(TSubclassOf<class ABaseConstruct> construct);
@@ -93,10 +110,16 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Construction")
 	void ServerConstruct(TSubclassOf<class ABaseConstruct> construct, class AConstructibleSurface* surfaceToSpawnOn, class AShooterSandboxController* constructorController, FVector spawnLocation, FRotator spawnRotation);
 
-	//************ Other Functions ************
-
 	UFUNCTION(BlueprintCallable, Category = "Construction")
 	bool GetSpawnLocationAndRotation(FVector &spawnLocation, FRotator &spawnRotation, class AConstructibleSurface* &surfaceToSpawnOn, TSubclassOf<class ABaseConstruct> construct);
+
+//=#=#=#=#= OFFENSIVE FUNCTIONS =#=#=#=#=
+
+	void StartWeaponFire();
+	void StopWeaponFire();
+	void WeaponAltMode();
+
+	void AttemptControlOffensiveConstruct();
 
 	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Gameplay")
 	void SetOffensiveConstructInVicinity(class ABaseOffensiveConstruct* construct);
@@ -104,11 +127,21 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Gameplay")
 	class ABaseOffensiveConstruct* GetOffensiveConstructInVicinity();
 
-	UFUNCTION(BlueprintCallable, Category = "Construction")
-	void SwitchConstructionMode();
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Gameplay")
+	void Server_AttemptControlOffensiveConstruct(class ABaseOffensiveConstruct* constructToControl, class AShooterSandboxController* controllerController);
 
-	//************ Energy and Energy Pack Functions ************
-	
+	UFUNCTION(NetMulticast, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
+	void Multicast_PickupOrDropWeapon(class ABaseWeapon* theWeapon);
+
+	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
+	void Client_PickupOrDropWeapon(bool hasPickedUp);
+
+	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
+	void Client_UpdateWeaponAmmo(int max, int current);
+
+
+//=#=#=#=#= ENERGY FUNCTIONS =#=#=#=#=
+
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
 	void Server_AddEnergy(int amount, int maxEnergy);
 
@@ -133,28 +166,15 @@ public:
 	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
 	void DropEnergyPackOnOwningClient();
 
-	UFUNCTION(NetMulticast, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
-	void Multicast_PickupOrDropWeapon(class ABaseWeapon* theWeapon);
-
-	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
-	void Client_PickupOrDropWeapon(bool hasPickedUp);
-
-	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
-	void Client_UpdateWeaponAmmo(int max, int current);
-
 	UFUNCTION(Client, Reliable, BlueprintCallable, Category = "Energy")
 	void Client_EnergyNotification(const FString& reason, int amount, int greenRedNeut);
 
-	void StartWeaponFire();
-	void StopWeaponFire();
-	void WeaponAltMode();
+//=#=#=#=#= HUD FUNCTIONS =#=#=#=#=
 
-	//************ RPC Functions ************
+	UFUNCTION(Client, Reliable, BlueprintCallable, Category = "Messaging System")
+	void Client_SendAlertMessage(const FString& msg);
 
-	void AttemptControlOffensiveConstruct();
-
-	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Gameplay")
-	void Server_AttemptControlOffensiveConstruct(class ABaseOffensiveConstruct* constructToControl, class AShooterSandboxController* controllerController);
+//=#=#=#=#= TEMP FUNCTIONS =#=#=#=#=
 
 	UFUNCTION(BlueprintCallable)
 	void PrintTestData();
@@ -162,7 +182,10 @@ public:
 
 protected:
 
-//=#=#=#=#= VARIABLES =#=#=#=#=
+/********************************
+*       VARIABLES (2/2)         *
+********************************/
+
 	bool bIsRunning;
 	EMovementState previousMovementState;
 	EMovementState currentMovementState;
@@ -185,11 +208,13 @@ protected:
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
 	class AEnergyPack* myEnergyPack;
 
-//=#=#=#=#= FUNCTIONS =#=#=#=#=
-	
+/********************************
+*       FUNCTIONS (2/2)         *
+********************************/
+
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	//************ Movement Functions ************
+//=#=#=#=#= MOVEMENT FUNCTIONS =#=#=#=#=
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
@@ -207,6 +232,10 @@ protected:
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_ToggleRun(float newSpeed);
+
+/***********************************
+*       INHERENT FUNCTIONS         *
+***********************************/
 
 public:
 

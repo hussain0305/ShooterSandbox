@@ -11,30 +11,37 @@ class SHOOTERSANDBOX_API ABaseWeaponPickup : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
-	// Sets default values for this actor's properties
-	ABaseWeaponPickup();
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+/**************************
+*       VARIABLES         *
+**************************/
 
 public:	
+
+//=#=#=#=#= MISC VARIABLES =#=#=#=#=
 
 	FTimerHandle activationCountdown;
 
-	bool isActivated = false;
-
-	void ActivatePickup();
 	//Just a little Dev easter egg
 	class APickupSpawnArea* miMaestro;
 	class ABaseWeapon* spawnedWeapon;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TSubclassOf<class ABaseWeapon> theWeapon;
+	bool isActivated = false;
 
 	UPROPERTY(VisibleAnywhere)
 	class USphereComponent* vicinity;
+
+//=#=#=#=#= EDITABLE IN BLUEPRINTS =#=#=#=#=
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<class ABaseWeapon> theWeapon;
+
+/**************************
+*       FUNCTIONS         *
+**************************/
+
+//=#=#=#=#= WEAPON PICKUP FUNCTIONS =#=#=#=#=
+
+	void ActivatePickup();
 
 	UFUNCTION(BlueprintCallable)
 	void OnOverlapBegan(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -44,4 +51,11 @@ public:
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void DestroyThyself();
+
+//=#=#=#=#= INHERENT FUNCTIONS =#=#=#=#=
+	ABaseWeaponPickup();
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
 };

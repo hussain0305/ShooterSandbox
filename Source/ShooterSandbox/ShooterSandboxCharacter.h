@@ -26,17 +26,22 @@ class AShooterSandboxCharacter : public ACharacter
 
 public:
 
+/****************************
+*          CONSTANTS        *
+****************************/
 
 	const float BUILD_DISTANCE = 1500;
 	const float JETPACK_THRUST_COST = 10;
-
-	//This is always set in Multicast functions, no other replication needed
-	class ABaseWeapon* weaponCurrentlyHeld;
+	const float DEFAULT_BALANCE = 100;
+	const float DEFAULT_HEALTH = 25;
 
 /********************************
 *       VARIABLES (1/2)         *
 ********************************/
 
+	//This is always set in Multicast functions, no other replication needed
+	class ABaseWeapon* weaponCurrentlyHeld;
+	
 	EConstructionMode currentConstructionMode;
 
 	FTimerHandle movementStateMonitoring;
@@ -143,7 +148,7 @@ public:
 //=#=#=#=#= ENERGY FUNCTIONS =#=#=#=#=
 
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
-	void Server_AddEnergy(int amount, int maxEnergy);
+	void Server_AddEnergy(int amount);
 
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
 	void Server_SpendEnergy(int amount, int maxEnergy);

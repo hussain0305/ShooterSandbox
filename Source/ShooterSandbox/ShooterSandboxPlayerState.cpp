@@ -127,6 +127,7 @@ void AShooterSandboxPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 	DOREPLIFETIME(AShooterSandboxPlayerState, health);
 	DOREPLIFETIME(AShooterSandboxPlayerState, playerScore);
 	DOREPLIFETIME(AShooterSandboxPlayerState, playerNumber);
+	DOREPLIFETIME(AShooterSandboxPlayerState, currentMaxEnergy);
 	DOREPLIFETIME(AShooterSandboxPlayerState, numConstructsConstructed);
 	DOREPLIFETIME(AShooterSandboxPlayerState, numConstructsBroken);
 	DOREPLIFETIME(AShooterSandboxPlayerState, kills);

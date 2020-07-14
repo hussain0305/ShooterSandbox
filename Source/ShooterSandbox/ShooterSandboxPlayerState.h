@@ -36,7 +36,8 @@ protected:
 	UPROPERTY(Replicated)
 	int health;
 
-	int currentMaxEnergy = 5;
+	UPROPERTY(Replicated)
+	int currentMaxEnergy;
 
 	UPROPERTY(ReplicatedUsing = OnRep_EnergyChanged)
 	int energy;
@@ -96,7 +97,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Round Stats")
 	int GetEnergy();
 
-	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Round Stats")
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Round Stats")
 	void SetMaxEnergy(int max);
 
 	UFUNCTION(BlueprintCallable, Category = "Round Stats")

@@ -111,6 +111,8 @@ void AShooterSandboxGameMode::Server_GiveEnergyPackToPlayer(AShooterSandboxChara
 	spawnedPack->SetOwner(playerCharacter);
 	
 	playerCharacter->PickupEnergyPack(spawnedPack);
+
+	Cast<AShooterSandboxPlayerState>(playerCharacter->GetPlayerState())->SetMaxEnergy(MAX_ENERGY_AMOUNT);
 }
 
 void AShooterSandboxGameMode::Server_GiveEnergyToPlayers()
@@ -123,8 +125,7 @@ void AShooterSandboxGameMode::Server_GiveEnergyToPlayers()
 		currentPlayerCharacter = Cast<AShooterSandboxCharacter>(currentPlayerController->GetCharacter());
 		if (currentPlayerCharacter)
 		{
-			currentPlayerCharacter->Server_AddEnergy(PULSE_ENERGY_AMOUNT, MAX_ENERGY_AMOUNT);
-			currentPlayerCharacter->Client_EnergyNotification("Energy Pulse", PULSE_ENERGY_AMOUNT, 0);
+			currentPlayerCharacter->Server_AddEnergy(PULSE_ENERGY_AMOUNT);
 		}
 	}
 }

@@ -471,20 +471,20 @@ bool AShooterSandboxCharacter::GetSpawnLocationAndRotation(FVector &spawnLocatio
 	return false;
 }
 
-bool AShooterSandboxCharacter::Server_AddEnergy_Validate(int amount, int maxEnergy)
+bool AShooterSandboxCharacter::Server_AddEnergy_Validate(int amount)
 {
 	return true;
 }
 
-void AShooterSandboxCharacter::Server_AddEnergy_Implementation(int amount, int maxEnergy)
+void AShooterSandboxCharacter::Server_AddEnergy_Implementation(int amount)
 {
 	if (!myEnergyPack || !myPlayerState || !myController)
 	{
 		return;
 	}
 
-	myPlayerState->SetMaxEnergy(maxEnergy);
 	int currentEnergy = myPlayerState->GetEnergy();
+	int maxEnergy = myPlayerState->GetMaxEnergy();
 
 	if (currentEnergy >= maxEnergy)
 	{
@@ -492,6 +492,7 @@ void AShooterSandboxCharacter::Server_AddEnergy_Implementation(int amount, int m
 	}
 
 	myPlayerState->IncrementOrDecrementEnergyBy((currentEnergy + amount > maxEnergy) ? (maxEnergy - currentEnergy) : amount);
+	Client_EnergyNotification("Energy Pulse", amount, 0);
 }
 
 bool AShooterSandboxCharacter::Server_SpendEnergy_Validate(int amount, int maxEnergy)

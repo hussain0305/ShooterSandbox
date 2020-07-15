@@ -19,11 +19,21 @@ void AShooterSandboxPlayerState::BeginPlay()
 	deaths = 0;
 }
 
-int AShooterSandboxPlayerState::TakeHealthDamage(int damageAmount)
+int AShooterSandboxPlayerState::HealthChangedBy(int amount)
 {
-	health -= damageAmount;
+	health -= amount;
+	health = health < 0 ? 0 : health;
 
 	return health;
+}
+
+int AShooterSandboxPlayerState::BalanceChangedBy(int amount)
+{
+	balance -= amount;
+	balance = balance < 0 ? 0 : balance;
+	balance = balance > currentMaxBalance ? currentMaxBalance : balance;
+
+	return balance;
 }
 
 #pragma region Getters And Setters
@@ -100,6 +110,19 @@ void AShooterSandboxPlayerState::SetMaxEnergy_Implementation(int max)
 	currentMaxEnergy = max;
 }
 
+bool AShooterSandboxPlayerState::SetHealthAndBalance_Validate(int healthVal, int balanceVal)
+{
+	return true;
+}
+
+void AShooterSandboxPlayerState::SetHealthAndBalance_Implementation(int healthVal, int balanceVal)
+{
+	health = healthVal;
+	currentMaxHealth = healthVal;
+	balance = balanceVal;
+	currentMaxBalance = balanceVal;
+}
+
 int AShooterSandboxPlayerState::GetMaxEnergy()
 {
 	return currentMaxEnergy;
@@ -125,10 +148,13 @@ void AShooterSandboxPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 	DOREPLIFETIME_CONDITION(AShooterSandboxPlayerState, energy, COND_OwnerOnly);
 
 	DOREPLIFETIME(AShooterSandboxPlayerState, health);
+	DOREPLIFETIME(AShooterSandboxPlayerState, balance);
 	DOREPLIFETIME(AShooterSandboxPlayerState, playerScore);
 	DOREPLIFETIME(AShooterSandboxPlayerState, playerNumber);
 	DOREPLIFETIME(AShooterSandboxPlayerState, currentMaxEnergy);
 	DOREPLIFETIME(AShooterSandboxPlayerState, numConstructsConstructed);
 	DOREPLIFETIME(AShooterSandboxPlayerState, numConstructsBroken);
 	DOREPLIFETIME(AShooterSandboxPlayerState, kills);
+	DOREPLIFETIME(AShooterSandboxPlayerState, currentMaxHealth);
+	DOREPLIFETIME(AShooterSandboxPlayerState, currentMaxBalance);
 }

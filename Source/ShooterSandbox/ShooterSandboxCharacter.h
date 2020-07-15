@@ -32,8 +32,6 @@ public:
 
 	const float BUILD_DISTANCE = 1500;
 	const float JETPACK_THRUST_COST = 10;
-	const float DEFAULT_BALANCE = 100;
-	const float DEFAULT_HEALTH = 25;
 
 /********************************
 *       VARIABLES (1/2)         *
@@ -70,8 +68,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	TSubclassOf<class UCameraShake> runCamShake;
 
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+	//TSubclassOf<class UCameraShake> endRunCamShake;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
-	TSubclassOf<class UCameraShake> endRunCamShake;
+	TSubclassOf<class UCameraShake> bulletHitShake;
 
 /*******************************
 *       FUNCTIONS(1/2)         *
@@ -144,6 +145,9 @@ public:
 	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
 	void Client_UpdateWeaponAmmo(int max, int current);
 
+//=#=#=#=#= ENERGY FUNCTIONS =#=#=#=#=
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser) override;
 
 //=#=#=#=#= ENERGY FUNCTIONS =#=#=#=#=
 
@@ -178,6 +182,12 @@ public:
 
 	UFUNCTION(Client, Reliable, BlueprintCallable, Category = "Messaging System")
 	void Client_SendAlertMessage(const FString& msg);
+
+	UFUNCTION(Client, Reliable, BlueprintCallable, Category = "Disbalance System")
+	void Client_DisbalanceBar();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Disbalance System")
+	void HUD_ShowDisbalanceBar();
 
 //=#=#=#=#= TEMP FUNCTIONS =#=#=#=#=
 

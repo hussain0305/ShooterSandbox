@@ -2,6 +2,7 @@
 
 #include "ShooterProjectile.h"
 #include "ShooterSandboxController.h"
+#include "ShooterSandboxCharacter.h"
 #include "BaseConstruct.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
@@ -78,6 +79,11 @@ void AShooterProjectile::OnProjectileHit(UPrimitiveComponent * HitComp, AActor *
 	if (Cast<ABaseConstruct>(OtherActor))
 	{
 		Cast<ABaseConstruct>(OtherActor)->TakeDamage((float)damage, FDamageEvent(), GetShooterController(), GetInstigator());
+	}
+
+	if (Cast<AShooterSandboxCharacter>(OtherActor))
+	{
+		Cast<AShooterSandboxCharacter>(OtherActor)->TakeDamage((float)damage, FDamageEvent(), GetShooterController(), GetInstigator());
 	}
 
 	if(destroyOnImpact)

@@ -25,34 +25,45 @@ public:
 
 //=#=#=#=#= REPLICATED VARIABLES =#=#=#=#=
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	int playerNumber;
 
 protected:
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	int playerScore;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	int currentMaxHealth;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	int health;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	int currentMaxBalance;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	int balance;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	int currentMaxEnergy;
 
-	UPROPERTY(ReplicatedUsing = OnRep_EnergyChanged)
+	UPROPERTY(ReplicatedUsing = OnRep_EnergyChanged, BlueprintReadOnly)
 	int energy;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	int numConstructsConstructed;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	int numConstructsBroken;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	int kills;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	int deaths;
+
+	friend class AShooterSandboxCharacter;
 
 public:
 
@@ -62,7 +73,10 @@ public:
 **************************/
 
 	UFUNCTION(BlueprintCallable)
-	int TakeHealthDamage(int damageAmount);
+	int HealthChangedBy(int amount);
+
+	UFUNCTION(BlueprintCallable)
+	int BalanceChangedBy(int amount);
 
 	UFUNCTION(BlueprintCallable, Category = "Round Stats")
 	void HasDied();
@@ -99,6 +113,9 @@ public:
 
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Round Stats")
 	void SetMaxEnergy(int max);
+
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Round Stats")
+	void SetHealthAndBalance(int healthVal, int balanceVal);
 
 	UFUNCTION(BlueprintCallable, Category = "Round Stats")
 	int GetMaxEnergy();

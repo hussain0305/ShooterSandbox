@@ -589,6 +589,11 @@ void AShooterSandboxCharacter::PickupEnergyPack_Implementation(AEnergyPack* theP
 	myEnergyPack->energyPackBody->SetSimulatePhysics(false);
 	myEnergyPack->boxCollider->SetSimulatePhysics(false);
 
+	if (myPlayerState)
+	{
+		myPlayerState->SetHealthAndBalance(myPlayerState->currentMaxHealth, myPlayerState->currentMaxBalance);
+	}
+
 	myEnergyPack->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("EnergyPackHolder"));
 }
 
@@ -827,6 +832,50 @@ void AShooterSandboxCharacter::Server_AttemptControlOffensiveConstruct_Implement
 {
 	//Construct->Set Owner on client
 	constructToControl->Multicast_ControlOffensive(controllerController);
+}
+
+float AShooterSandboxCharacter::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
+{
+	if (!HasAuthority() || DamageCauser == nullptr || EventInstigator == nullptr || !myPlayerState)
+	{
+		return -500.0f;
+	}
+
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	myController->ClientPlayCameraShake(bulletHitShake);
+
+	if (myEnergyPack)
+	{
+		int currentBalance = myPlayerState->BalanceChangedBy(DamageAmount);
+		Client_DisbalanceBar();
+		if (currentBalance == 0)
+		{
+			DropEnergyPack();
+		}
+	}
+	else
+	{
+		int currentHealth = myPlayerState->HealthChangedBy(DamageAmount);
+	}
+
+	return 0.0f;
+	//health -= DamageAmount;
+	//Cast<AShooterSandboxController>(EventInstigator)->ProxyForHUD_ByCommandCode(EHUDCommandType::SuccessfulHit);
+
+	//if (health < 0)
+	//{
+	//	Cast<AShooterSandboxPlayerState>(EventInstigator->PlayerState)->HasBrokenConstruct(maxHealth);
+	//	Cast<AShooterSandboxController>(EventInstigator)->ProxyForHUD_ByCommandCode(EHUDCommandType::PlayHitAnimation);
+	//	DestroyConstruct();
+	//}
+
+	//return health;
+}
+
+void AShooterSandboxCharacter::Client_DisbalanceBar_Implementation()
+{
+	HUD_ShowDisbalanceBar();
 }
 
 void AShooterSandboxCharacter::PrintTestData()

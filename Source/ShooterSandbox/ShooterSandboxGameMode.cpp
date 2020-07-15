@@ -112,7 +112,9 @@ void AShooterSandboxGameMode::Server_GiveEnergyPackToPlayer(AShooterSandboxChara
 	
 	playerCharacter->PickupEnergyPack(spawnedPack);
 
-	Cast<AShooterSandboxPlayerState>(playerCharacter->GetPlayerState())->SetMaxEnergy(MAX_ENERGY_AMOUNT);
+	AShooterSandboxPlayerState* thisGuysPlayerState = Cast<AShooterSandboxPlayerState>(playerCharacter->GetPlayerState());
+	thisGuysPlayerState->SetMaxEnergy(MAX_ENERGY_AMOUNT);
+	thisGuysPlayerState->SetHealthAndBalance(DEFAULT_PLAYER_HEALTH, DEFAULT_PLAYER_BALANCE);
 }
 
 void AShooterSandboxGameMode::Server_GiveEnergyToPlayers()

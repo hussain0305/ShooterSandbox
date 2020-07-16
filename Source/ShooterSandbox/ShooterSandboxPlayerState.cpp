@@ -23,6 +23,7 @@ int AShooterSandboxPlayerState::HealthChangedBy(int amount)
 {
 	health -= amount;
 	health = health < 0 ? 0 : health;
+	health = health > currentMaxHealth ? currentMaxHealth : health;
 
 	return health;
 }

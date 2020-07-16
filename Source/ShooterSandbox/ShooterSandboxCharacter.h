@@ -94,6 +94,7 @@ public:
 
 	void SetCurrentEMovementState(EMovementState newState);
 
+	UFUNCTION(BlueprintCallable, Category = "Character")
 	EMovementState GetCurrentEMovementState();
 
 //=#=#=#=#= CONSTRUCTION FUNCTIONS =#=#=#=#=

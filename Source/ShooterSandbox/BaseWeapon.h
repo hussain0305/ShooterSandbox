@@ -24,6 +24,9 @@ public:
 //=#=#=#=#= EDITABLE IN BLUEPRINTS =#=#=#=#=
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString weaponName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class AShooterProjectile> projectile;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

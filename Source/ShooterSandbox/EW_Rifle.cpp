@@ -74,7 +74,7 @@ void AEW_Rifle::SpawnProjectile_Implementation()
 			if (currentClipSize == 0)
 			{
 				weilderCharacter->Multicast_PickupOrDropWeapon(nullptr);
-				weilderCharacter->Client_PickupOrDropWeapon(false);
+				weilderCharacter->Client_PickupOrDropWeapon(false, FString(" "));
 				DestroyWeapon();
 			}
 		}

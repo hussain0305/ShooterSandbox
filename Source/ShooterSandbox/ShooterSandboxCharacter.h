@@ -141,7 +141,7 @@ public:
 	void Multicast_PickupOrDropWeapon(class ABaseWeapon* theWeapon);
 
 	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
-	void Client_PickupOrDropWeapon(bool hasPickedUp);
+	void Client_PickupOrDropWeapon(bool hasPickedUp, const FString& weaponName);
 
 	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
 	void Client_UpdateWeaponAmmo(int max, int current);

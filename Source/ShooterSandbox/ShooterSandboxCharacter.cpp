@@ -716,25 +716,25 @@ void AShooterSandboxCharacter::Multicast_PickupOrDropWeapon_Implementation(ABase
 	}
 }
 
-bool AShooterSandboxCharacter::Client_PickupOrDropWeapon_Validate(bool hasPickedUp)
+bool AShooterSandboxCharacter::Client_PickupOrDropWeapon_Validate(bool hasPickedUp, const FString& weaponName)
 {
 	return true;
 }
 
-void AShooterSandboxCharacter::Client_PickupOrDropWeapon_Implementation(bool hasPickedUp)
+void AShooterSandboxCharacter::Client_PickupOrDropWeapon_Implementation(bool hasPickedUp, const FString& weaponName)
 {
 
 	if (hasPickedUp)
 	{
 		if (weaponCurrentlyHeld) {
-			myHUD->WeaponAmmoScreen(true);
+			myHUD->WeaponAmmoScreen(true, weaponName);
 			myHUD->UpdateWeaponAmmo(weaponCurrentlyHeld->currentClipSize, weaponCurrentlyHeld->clipSize);
 		}
 	}
 
 	else
 	{
-		myHUD->WeaponAmmoScreen(false);
+		myHUD->WeaponAmmoScreen(false, weaponName);
 	}
 }
 

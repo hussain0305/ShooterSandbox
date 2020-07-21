@@ -104,7 +104,7 @@ public:
 	void ShowScorecard(bool shouldOpen);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Gameplay")
-	void WeaponAmmoScreen(bool show);
+	void WeaponAmmoScreen(bool show, const FString& weaponName);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Gameplay")
 	void UpdateWeaponAmmo(int currentEnergy, int maxEnergy);

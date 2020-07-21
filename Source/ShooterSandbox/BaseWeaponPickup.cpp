@@ -62,7 +62,7 @@ void ABaseWeaponPickup::OnOverlapBegan(UPrimitiveComponent * OverlappedComp, AAc
 		}
 		spawnedWeapon->WasPickedUpBy(Cast<AShooterSandboxCharacter>(OtherActor));
 		Cast<AShooterSandboxCharacter>(OtherActor)->Multicast_PickupOrDropWeapon(spawnedWeapon);
-		Cast<AShooterSandboxCharacter>(OtherActor)->Client_PickupOrDropWeapon(true);
+		Cast<AShooterSandboxCharacter>(OtherActor)->Client_PickupOrDropWeapon(true, spawnedWeapon->weaponName);
 
 		FTimerHandle destroyingRoutine;
 		//GetWorld()->GetTimerManager().SetTimer(destroyingRoutine, this, &ABaseWeaponPickup::DestroyThyself, 0.1f, true);

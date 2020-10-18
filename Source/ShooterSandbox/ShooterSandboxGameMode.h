@@ -28,6 +28,7 @@ public:
 
 	FTimerHandle energyPulse;
 	FTimerHandle weaponSpawnRoutine;
+	FTimerHandle spawnGrabbablesRoutine;
 
 //=#=#=#=#= EDITABLE IN BLUEPRINTS =#=#=#=#=
 
@@ -58,6 +59,8 @@ public:
 //=#=#=#=#= GAMEPLAY FUNCTIONS =#=#=#=#=
 
 	void SpawnNewPickup();
+
+	void SpawnNewGrabbable();
 
 	bool Server_RespawnPlayer(APlayerController* playerController, AShooterSandboxCharacter*& playerCharacter);
 	

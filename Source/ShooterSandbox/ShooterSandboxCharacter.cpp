@@ -77,7 +77,7 @@ void AShooterSandboxCharacter::SetupPlayerInputComponent(class UInputComponent* 
 
 	PlayerInputComponent->BindAction("MouseLeft", IE_Pressed, this, &AShooterSandboxCharacter::StartWeaponFire);
 	PlayerInputComponent->BindAction("MouseLeft", IE_Released, this, &AShooterSandboxCharacter::StopWeaponFire);
-	PlayerInputComponent->BindAction("MouseRight", IE_Pressed, this, &AShooterSandboxCharacter::WeaponAltMode);
+	PlayerInputComponent->BindAction("MouseRight", IE_Pressed, this, &AShooterSandboxCharacter::AlternateAction);
 
 	PlayerInputComponent->BindAction("Use", IE_Pressed, this, &AShooterSandboxCharacter::AttemptControlOffensiveConstruct);
 	PlayerInputComponent->BindAction("SwitchConstructionMode", IE_Pressed, this, &AShooterSandboxCharacter::SwitchConstructionMode);
@@ -794,6 +794,16 @@ void AShooterSandboxCharacter::StopWeaponFire()
 	}
 
 	weaponCurrentlyHeld->StopShooting();
+}
+
+void AShooterSandboxCharacter::AlternateAction()
+{
+	if (weaponCurrentlyHeld) {
+		WeaponAltMode();
+		return;
+	}
+
+	//Perform pull action
 }
 
 void AShooterSandboxCharacter::WeaponAltMode()

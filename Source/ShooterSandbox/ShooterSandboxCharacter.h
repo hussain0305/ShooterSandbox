@@ -124,6 +124,7 @@ public:
 
 	void StartWeaponFire();
 	void StopWeaponFire();
+	void AlternateAction();
 	void WeaponAltMode();
 
 	void AttemptControlOffensiveConstruct();

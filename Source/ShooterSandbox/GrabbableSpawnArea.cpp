@@ -14,37 +14,37 @@ AGrabbableSpawnArea::AGrabbableSpawnArea()
 }
 
 // Called when the game starts or when spawned
-void AGrabbableSpawnArea::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
+//void AGrabbableSpawnArea::BeginPlay()
+//{
+//	Super::BeginPlay();
+//	
+//}
 
-void AGrabbableSpawnArea::SpawnNewGrabbable(TSubclassOf<class AGrabbable> GrabbableToSpawn)
-{
-	if (!HasAuthority())
-	{
-		return;
-	}
+//void AGrabbableSpawnArea::SpawnNewGrabbable(TSubclassOf<class AGrabbable> GrabbableToSpawn)
+//{
+//	if (!HasAuthority())
+//	{
+//		return;
+//	}
+//
+//	if (currentSpawnedGrabbable)
+//	{
+//		UKismetSystemLibrary::PrintString(this, (TEXT("Not spawning new since current spawn already present")));
+//		return;
+//		//currentSpawnedPickup->DestroyThyself();
+//	}
+//
+//	FActorSpawnParameters spawnParams;
+//	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+//	currentSpawnedGrabbable = GetWorld()->SpawnActor<AGrabbable>(GrabbableToSpawn,
+//		GetActorLocation(),
+//		FRotator::ZeroRotator, spawnParams);
+//	//currentSpawnedGrabbable->miMaestro = this;
+//}
 
-	if (currentSpawnedGrabbable)
-	{
-		UKismetSystemLibrary::PrintString(this, (TEXT("Not spawning new since current spawn already present")));
-		return;
-		//currentSpawnedPickup->DestroyThyself();
-	}
-
-	FActorSpawnParameters spawnParams;
-	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	currentSpawnedGrabbable = GetWorld()->SpawnActor<AGrabbable>(GrabbableToSpawn,
-		GetActorLocation(),
-		FRotator::ZeroRotator, spawnParams);
-	//currentSpawnedGrabbable->miMaestro = this;
-}
-
-void AGrabbableSpawnArea::GrabbableWasGrabbed()
-{
-	currentSpawnedGrabbable = nullptr;
-
-	//Multicast here for pickup spawn effects
-}
+//void AGrabbableSpawnArea::GrabbableWasGrabbed()
+//{
+//	currentSpawnedGrabbable = nullptr;
+//
+//	//Multicast here for pickup spawn effects
+//}

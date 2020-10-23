@@ -39,7 +39,7 @@ void APickupSpawnArea::SpawnNewPickup(TSubclassOf<class ABaseWeaponPickup> Picku
 	currentSpawnedPickup = GetWorld()->SpawnActor<ABaseWeaponPickup>(PickupToSpawn,
 		GetActorLocation(),
 		FRotator::ZeroRotator, spawnParams);
-	currentSpawnedPickup->miMaestro = this;
+	currentSpawnedPickup->associatedSpawnArea = this;
 }
 
 void APickupSpawnArea::PickupWasPickedUp()

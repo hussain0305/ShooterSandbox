@@ -31,6 +31,7 @@ public:
 ****************************/
 
 	const float BUILD_DISTANCE = 1500;
+	const float GRAB_DISTANCE = 4500;
 	const float JETPACK_THRUST_COST = 10;
 
 /********************************
@@ -146,6 +147,8 @@ public:
 
 	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
 	void Client_UpdateWeaponAmmo(int max, int current);
+
+	bool GetGrabbableInVicinity(class AGrabbable* &grab);
 
 //=#=#=#=#= ENERGY FUNCTIONS =#=#=#=#=
 

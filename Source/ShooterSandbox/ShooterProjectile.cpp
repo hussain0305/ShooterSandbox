@@ -36,7 +36,6 @@ void AShooterProjectile::BeginPlay()
 	
 	CollisionComponent->OnComponentHit.AddDynamic(this, &AShooterProjectile::OnProjectileHit);
 
-	FTimerHandle countdownLife;
 	if (HasAuthority())
 	{
 		//UKismetSystemLibrary::PrintString(this, (TEXT("Server destru ")));
@@ -90,6 +89,14 @@ void AShooterProjectile::OnProjectileHit(UPrimitiveComponent * HitComp, AActor *
 	{
 		DestroyProjectile();
 	}
+}
+
+void AShooterProjectile::InvalidateDeathTimer_Implementation()
+{
+	//GetWorldTimerManager().ClearTimer(countdownLife);
+	//countdownLife.Invalidate();
+
+	UKismetSystemLibrary::PrintString(this, (TEXT("Invalidated projectile death")));
 }
 
 void AShooterProjectile::Local_DestroyProjectile()

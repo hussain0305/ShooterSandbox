@@ -64,7 +64,7 @@ void ABaseWeaponPickup::OnOverlapBegan(UPrimitiveComponent * OverlappedComp, AAc
 		Cast<AShooterSandboxCharacter>(OtherActor)->Multicast_PickupOrDropWeapon(spawnedWeapon);
 		Cast<AShooterSandboxCharacter>(OtherActor)->Client_PickupOrDropWeapon(true, spawnedWeapon->weaponName);
 
-		FTimerHandle destroyingRoutine;
+		//FTimerHandle destroyingRoutine;
 		//GetWorld()->GetTimerManager().SetTimer(destroyingRoutine, this, &ABaseWeaponPickup::DestroyThyself, 0.1f, true);
 		DestroyThyself();
 	}
@@ -85,9 +85,9 @@ bool ABaseWeaponPickup::DestroyThyself_Validate()
 
 void ABaseWeaponPickup::DestroyThyself_Implementation()
 {
-	if (miMaestro)
+	if (associatedSpawnArea)
 	{
-		miMaestro->PickupWasPickedUp();
+		associatedSpawnArea->PickupWasPickedUp();
 	}
 	Destroy();
 }

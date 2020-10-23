@@ -4,10 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "ShooterProjectile.h"
 #include "Grabbable.generated.h"
 
+
 UCLASS()
-class SHOOTERSANDBOX_API AGrabbable : public AActor
+class SHOOTERSANDBOX_API AGrabbable : public AShooterProjectile
 {
 	GENERATED_BODY()
 	
@@ -21,4 +23,16 @@ protected:
 
 public:	
 
+	class ALevelGrabbablesManager* grabManager;
+	/*UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* body;*/
+
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float lifetime = 10.0f;*/
+
+	//FTimerHandle deathCountdown;
+
+	/*void TurnEthereal();
+
+	void SelfDestruction();*/
 };

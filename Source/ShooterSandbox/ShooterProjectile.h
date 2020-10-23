@@ -23,6 +23,8 @@ protected:
 
 public:
 
+	FTimerHandle countdownLife;
+
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
 	class USphereComponent* CollisionComponent;
 
@@ -50,6 +52,8 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void DestroyProjectile();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void InvalidateDeathTimer();
 
 	void Local_DestroyProjectile();
 };

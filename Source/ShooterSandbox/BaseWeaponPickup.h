@@ -21,8 +21,7 @@ public:
 
 	FTimerHandle activationCountdown;
 
-	//Just a little Dev easter egg
-	class APickupSpawnArea* miMaestro;
+	class APickupSpawnArea* associatedSpawnArea;
 	class ABaseWeapon* spawnedWeapon;
 
 	bool isActivated = false;

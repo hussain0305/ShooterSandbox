@@ -35,8 +35,6 @@ void AShooterSandboxGameMode::BeginPlay()
 	
 	GetWorld()->GetTimerManager().SetTimer(energyPulse, this, &AShooterSandboxGameMode::Server_GiveEnergyToPlayers, 4.0f, true);
 	GetWorld()->GetTimerManager().SetTimer(weaponSpawnRoutine, this, &AShooterSandboxGameMode::SpawnNewPickup, pickupInterval, true);
-	GetWorld()->GetTimerManager().SetTimer(spawnGrabbablesRoutine, this, &AShooterSandboxGameMode::SpawnNewGrabbable, 4.0f, true);
-
 }
 
 void AShooterSandboxGameMode::PostLogin(APlayerController* NewPlayer)
@@ -71,18 +69,6 @@ void AShooterSandboxGameMode::SpawnNewPickup()
 	if(pickupSpots.Num() > 0 && Cast<APickupSpawnArea>(pickupSpots[0]))
 	{
 		Cast<APickupSpawnArea>(pickupSpots[0])->SpawnNewPickup(allWeaponPickups[0]);//FMath::RandRange(0, allWeaponPickups.Num() - 1)
-	}
-
-}
-
-void AShooterSandboxGameMode::SpawnNewGrabbable()
-{
-	TArray<AActor*> grabbableSpots;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APickupSpawnArea::StaticClass(), grabbableSpots);
-
-	if (grabbableSpots.Num() > 0 && Cast<APickupSpawnArea>(grabbableSpots[0]))
-	{
-		Cast<APickupSpawnArea>(grabbableSpots[0])->SpawnNewPickup(allWeaponPickups[0]);//FMath::RandRange(0, allWeaponPickups.Num() - 1)
 	}
 
 }

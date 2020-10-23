@@ -10,6 +10,8 @@
 #include "BaseOffensiveConstruct.h"
 #include "BaseWeapon.h"
 #include "EnergyPack.h"
+#include "Grabbable.h"
+#include "LevelGrabbablesManager.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -804,6 +806,15 @@ void AShooterSandboxCharacter::AlternateAction()
 	}
 
 	//Perform pull action
+
+	AGrabbable* fetchedGrab;
+	if (GetGrabbableInVicinity(fetchedGrab))
+	{
+		//FString msg = "Pulled " + fetchedGrab->GetName();
+		//myHUD->ShowNotificationMessage(msg);
+
+		fetchedGrab->grabManager->PlayerWantsGrabbable(this, fetchedGrab);
+	}
 }
 
 void AShooterSandboxCharacter::WeaponAltMode()
@@ -842,6 +853,25 @@ void AShooterSandboxCharacter::Server_AttemptControlOffensiveConstruct_Implement
 {
 	//Construct->Set Owner on client
 	constructToControl->Multicast_ControlOffensive(controllerController);
+}
+
+bool AShooterSandboxCharacter::GetGrabbableInVicinity(AGrabbable* &grab)
+{
+	TArray<AActor*> foundGrabbables;
+	
+	TArray<TEnumAsByte<EObjectTypeQuery>> objectTypes;
+	objectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_GameTraceChannel8));
+	TArray<AActor*> actorsToIgnore{ this };
+
+	if (UKismetSystemLibrary::SphereOverlapActors(GetWorld(), GetActorLocation(), GRAB_DISTANCE, objectTypes, AGrabbable::StaticClass(), actorsToIgnore, foundGrabbables))
+	{
+		grab = Cast<AGrabbable>(foundGrabbables[0]);
+		return true;
+	}
+
+	myHUD->ShowNotificationMessage("Nothing to Pull nearby");
+
+	return false;
 }
 
 float AShooterSandboxCharacter::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)

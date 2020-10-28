@@ -4,46 +4,79 @@
 #include "Grabbable.h"
 #include "Engine/StaticMesh.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "LevelGrabbablesManager.h"
+#include "ShooterSandboxCharacter.h"
+#include "Kismet/GameplayStatics.h"
 
-// Sets default values
+
 AGrabbable::AGrabbable()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-
-	//body = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Body"));
-	//body->SetMobility(EComponentMobility::Movable);
-
 	ProjectileMovementComponent->InitialSpeed = 0;
 	ProjectileMovementComponent->MaxSpeed = 30000.0f;
 	ProjectileMovementComponent->bRotationFollowsVelocity = false;
 	ProjectileMovementComponent->bShouldBounce = true;
+
+	isThrowable = false;
 }
 
-// Called when the game starts or when spawned
 void AGrabbable::BeginPlay()
 {
 	Super::BeginPlay();
+}
 
-	/*TurnEthereal();
+void AGrabbable::ApplyProjectileCollisionSettings()
+{
+}
 
-	if (HasAuthority())
+
+void AGrabbable::MoveTowardsSocket_Implementation(AShooterSandboxCharacter* grabber)
+{
+	grabberCharacter = grabber;
+	grabLerpAlpha = 0.0f;
+
+	if (HasAuthority() && grabberCharacter)
 	{
-		GetWorld()->GetTimerManager().SetTimer(deathCountdown, this, &AGrabbable::SelfDestruction, lifetime, true);
-	}*/
+		GetWorld()->GetTimerManager().SetTimer(grabMotion, this, &AGrabbable::GrabMotion, MOTION_PULSE, true);
+	}
 
 }
 
-//void AGrabbable::TurnEthereal()
-//{
-//	body->CanCharacterStepUpOn = ECB_No;
-//	body->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-//}
-//
-//void AGrabbable::SelfDestruction()
-//{
-//	if (HasAuthority()) 
-//	{
-//		Destroy(this);
-//	}
-//}
+void AGrabbable::GrabMotion()
+{
+	if (isThrowable) 
+	{
+		if (FVector::Dist(GetActorLocation(), grabberCharacter->GetMesh()->GetSocketLocation("GrabSocket")) > 100) 
+		{
+			isThrowable = false;
+			grabLerpAlpha = 0.766f;
+		}
+		else
+		{
+			return;
+		}
+
+	}
+	SetActorLocation(FMath::Lerp(GetActorLocation(), grabberCharacter->GetMesh()->GetSocketLocation("GrabSocket"), grabLerpAlpha));
+	grabLerpAlpha += MOTION_PULSE;
+
+	if (grabLerpAlpha >= 1.0f)
+	{
+		isThrowable = true;
+	}
+}
+
+void AGrabbable::CancelGrabMotion()
+{
+	if (grabMotion.IsValid())
+	{
+		GetWorldTimerManager().ClearTimer(grabMotion);
+		grabMotion.Invalidate();
+	}
+}
+
+void AGrabbable::SetGrabManager_Implementation(ALevelGrabbablesManager* grabMan)
+{
+	grabManager = grabMan;
+}
+
 

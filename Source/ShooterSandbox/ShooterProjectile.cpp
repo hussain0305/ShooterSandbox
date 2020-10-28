@@ -38,14 +38,13 @@ void AShooterProjectile::BeginPlay()
 
 	if (HasAuthority())
 	{
-		//UKismetSystemLibrary::PrintString(this, (TEXT("Server destru ")));
 		GetWorld()->GetTimerManager().SetTimer(countdownLife, this, &AShooterProjectile::DestroyProjectile, lifetime, false);
 	}
-	else
+
+	/*else
 	{
-		//UKismetSystemLibrary::PrintString(this, (TEXT("LOCAL DESTRUCTION")));
 		GetWorld()->GetTimerManager().SetTimer(countdownLife, this, &AShooterProjectile::Local_DestroyProjectile, lifetime, false);
-	}
+	}*/
 }
 
 void AShooterProjectile::FireInDirection(FVector shootDirection)
@@ -93,10 +92,13 @@ void AShooterProjectile::OnProjectileHit(UPrimitiveComponent * HitComp, AActor *
 
 void AShooterProjectile::InvalidateDeathTimer_Implementation()
 {
-	//GetWorldTimerManager().ClearTimer(countdownLife);
-	//countdownLife.Invalidate();
+	if (countdownLife.IsValid())
+	{
+		GetWorldTimerManager().ClearTimer(countdownLife);
+		countdownLife.Invalidate();
 
-	UKismetSystemLibrary::PrintString(this, (TEXT("Invalidated projectile death")));
+		UKismetSystemLibrary::PrintString(this, (TEXT("Invalidated projectile death")));
+	}
 }
 
 void AShooterProjectile::Local_DestroyProjectile()
@@ -111,5 +113,7 @@ bool AShooterProjectile::DestroyProjectile_Validate()
 
 void AShooterProjectile::DestroyProjectile_Implementation()
 {
+	UKismetSystemLibrary::PrintString(this, (TEXT("PROJECTILE WAS DESTROYED")));
+
 	Destroy(this);
 }

@@ -5,6 +5,7 @@
 #include "Grabbable.h"
 #include "ShooterSandboxCharacter.h"
 #include "ShooterSandboxController.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ALevelGrabbablesManager::ALevelGrabbablesManager()
@@ -45,7 +46,8 @@ void ALevelGrabbablesManager::SpawnSome()
 		spawnedGrabbable = GetWorld()->SpawnActor<AGrabbable>(grabbableObjectBlueprints[currentGrabbableBlueprint],
 			loc, FRotator::ZeroRotator, spawnParams);
 
-		spawnedGrabbable->grabManager = this;
+		spawnedGrabbable->SetGrabManager(this);
+		//spawnedGrabbable->grabManager = this;
 	}
 }
 
@@ -56,13 +58,20 @@ bool ALevelGrabbablesManager::PlayerWantsGrabbable_Validate(AShooterSandboxChara
 
 void ALevelGrabbablesManager::PlayerWantsGrabbable_Implementation(AShooterSandboxCharacter* grabber, AGrabbable * grab)
 {
+	//Cancel this grabbale's auto-death
+	grab->InvalidateDeathTimer();
+
+	//Sort out owner properties
+	if (grabber->GetGrabbableInHand())
+	{
+		grabber->GetGrabbableInHand()->DestroyProjectile();
+	}
 	grab->Instigator = grabber;
 	grab->SetOwner(grabber);
 	grab->SetShooterController(Cast<AShooterSandboxController>(grabber->GetController()));
-	grab->InvalidateDeathTimer();
+	grabber->Server_SetGrabbableInHand(grab);
 
-	//grab->FireInDirection(TurretCamera->GetForwardVector());//>GetComponentRotation().Vector());
-
-	//userController->ClientPlayCameraShake(shotShake, 1, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
-
+	//Move Grabbable towards player
+	grab->MoveTowardsSocket(grabber);
+	grab->ApplyVisualChangesUponGrab();
 }

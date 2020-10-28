@@ -130,7 +130,7 @@ void ABaseOffensiveConstruct::OnOverlapBegan(UPrimitiveComponent * OverlappedCom
 
 	if (Cast<AShooterSandboxCharacter>(OtherActor) && !isBeingUsed)
 	{
-		Cast<AShooterSandboxCharacter>(OtherActor)->SetOffensiveConstructInVicinity(this);
+		Cast<AShooterSandboxCharacter>(OtherActor)->Client_SetOffensiveConstructInVicinity(this);
 	}
 }
 
@@ -142,7 +142,7 @@ void ABaseOffensiveConstruct::OnOverlapEnded(UPrimitiveComponent * OverlappedCom
 
 	if (Cast<AShooterSandboxCharacter>(OtherActor)) 
 	{
-		Cast<AShooterSandboxCharacter>(OtherActor)->SetOffensiveConstructInVicinity(nullptr);
+		Cast<AShooterSandboxCharacter>(OtherActor)->Client_SetOffensiveConstructInVicinity(nullptr);
 	}
 }
 

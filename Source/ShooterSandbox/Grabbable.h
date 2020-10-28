@@ -23,16 +23,31 @@ protected:
 
 public:	
 
+	const float MOTION_PULSE = 0.033f;
+
+	float grabLerpAlpha;
+	class AShooterSandboxCharacter* grabberCharacter;
+	FTimerHandle grabMotion;
+
+	bool isThrowable;
+
 	class ALevelGrabbablesManager* grabManager;
-	/*UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* body;*/
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void SetGrabManager(class ALevelGrabbablesManager* grabMan);
 
-	/*UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float lifetime = 10.0f;*/
+	void ApplyProjectileCollisionSettings();
 
-	//FTimerHandle deathCountdown;
+	UFUNCTION(Server, Reliable)
+	void MoveTowardsSocket(class AShooterSandboxCharacter* grabber);
 
-	/*void TurnEthereal();
+	UFUNCTION(BlueprintImplementableEvent)
+	void ApplyVisualChangesUponGrab();
 
-	void SelfDestruction();*/
+	UFUNCTION(BlueprintImplementableEvent)
+	void ApplyVisualChangesUponFire();
+
+	void GrabMotion();
+
+	void CancelGrabMotion();
 };

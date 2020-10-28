@@ -52,7 +52,7 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void DestroyProjectile();
 
-	UFUNCTION(NetMulticast, Reliable)
+	UFUNCTION(Server, Reliable)
 	void InvalidateDeathTimer();
 
 	void Local_DestroyProjectile();

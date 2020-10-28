@@ -79,7 +79,8 @@ void AShooterSandboxCharacter::SetupPlayerInputComponent(class UInputComponent* 
 
 	PlayerInputComponent->BindAction("MouseLeft", IE_Pressed, this, &AShooterSandboxCharacter::StartWeaponFire);
 	PlayerInputComponent->BindAction("MouseLeft", IE_Released, this, &AShooterSandboxCharacter::StopWeaponFire);
-	PlayerInputComponent->BindAction("MouseRight", IE_Pressed, this, &AShooterSandboxCharacter::AlternateAction);
+	PlayerInputComponent->BindAction("MouseRight", IE_Pressed, this, &AShooterSandboxCharacter::InitiateAlternateAction);
+	PlayerInputComponent->BindAction("MouseRight", IE_Released, this, &AShooterSandboxCharacter::ExecuteAlternateAction);
 
 	PlayerInputComponent->BindAction("Use", IE_Pressed, this, &AShooterSandboxCharacter::AttemptControlOffensiveConstruct);
 	PlayerInputComponent->BindAction("SwitchConstructionMode", IE_Pressed, this, &AShooterSandboxCharacter::SwitchConstructionMode);
@@ -331,7 +332,7 @@ void AShooterSandboxCharacter::Jetpack_Implementation()
 	}
 	else
 	{
-		PlayerOutOfEnergy();
+		Client_PlayerOutOfEnergy();
 	}
 }
 
@@ -529,7 +530,7 @@ void AShooterSandboxCharacter::Client_UpdateEnergyOnHUD_Implementation()
 	myHUD->UpdateEnergyLevel(myPlayerState->GetEnergy(), myPlayerState->GetMaxEnergy());
 }
 
-void AShooterSandboxCharacter::PlayerOutOfEnergy_Implementation()
+void AShooterSandboxCharacter::Client_PlayerOutOfEnergy_Implementation()
 {
 	myHUD->ShowNotificationMessage("Not enough Energy");
 	myHUD->OutOfEnergy();
@@ -554,18 +555,18 @@ void AShooterSandboxCharacter::TryConstruct(TSubclassOf<class ABaseConstruct> co
 	if (GetSpawnLocationAndRotation(spawnLocation, spawnRotation, surfaceToSpawnOn, construct)) {
 		if (construct.GetDefaultObject()->constructionCost > myPlayerState->GetEnergy())
 		{
-			PlayerOutOfEnergy();
+			Client_PlayerOutOfEnergy();
 			return;
 		}
 		ServerConstruct(construct, surfaceToSpawnOn, myController, spawnLocation, spawnRotation);
 	}
 }
 
-bool AShooterSandboxCharacter::SetOffensiveConstructInVicinity_Validate(ABaseOffensiveConstruct* construct) {
+bool AShooterSandboxCharacter::Client_SetOffensiveConstructInVicinity_Validate(ABaseOffensiveConstruct* construct) {
 	return true;
 }
 
-void AShooterSandboxCharacter::SetOffensiveConstructInVicinity_Implementation(ABaseOffensiveConstruct* construct)
+void AShooterSandboxCharacter::Client_SetOffensiveConstructInVicinity_Implementation(ABaseOffensiveConstruct* construct)
 {
 	currentConstructInVicinity = construct;
 	if (construct)
@@ -578,12 +579,12 @@ void AShooterSandboxCharacter::SetOffensiveConstructInVicinity_Implementation(AB
 	}
 }
 
-bool AShooterSandboxCharacter::PickupEnergyPack_Validate(AEnergyPack* thePack)
+bool AShooterSandboxCharacter::Server_PickupEnergyPack_Validate(AEnergyPack* thePack)
 {
 	return true;
 }
 
-void AShooterSandboxCharacter::PickupEnergyPack_Implementation(AEnergyPack* thePack)
+void AShooterSandboxCharacter::Server_PickupEnergyPack_Implementation(AEnergyPack* thePack)
 {
 	myEnergyPack = thePack;
 	PickupEnergyPackOnOwningClient(thePack);
@@ -616,12 +617,12 @@ void AShooterSandboxCharacter::PickupEnergyPackOnOwningClient_Implementation(AEn
 	myHUD->SetHasEnergyPack(true);
 }
 
-bool AShooterSandboxCharacter::DropEnergyPack_Validate()
+bool AShooterSandboxCharacter::Server_DropEnergyPack_Validate()
 {
 	return true;
 }
 
-void AShooterSandboxCharacter::DropEnergyPack_Implementation()
+void AShooterSandboxCharacter::Server_DropEnergyPack_Implementation()
 {
 	if(!myEnergyPack)
 	{
@@ -652,6 +653,16 @@ void AShooterSandboxCharacter::DropEnergyPackOnOwningClient_Implementation()
 	//myEnergyPack = nullptr;
 
 	myHUD->SetHasEnergyPack(false);
+}
+
+bool AShooterSandboxCharacter::Server_SetGrabbableInHand_Validate(AGrabbable * grabbableInHand)
+{
+	return true;
+}
+
+void AShooterSandboxCharacter::Server_SetGrabbableInHand_Implementation(AGrabbable * grabbableInHand)
+{
+	heldGrabbable = grabbableInHand;
 }
 
 ABaseOffensiveConstruct* AShooterSandboxCharacter::GetOffensiveConstructInVicinity()
@@ -798,7 +809,7 @@ void AShooterSandboxCharacter::StopWeaponFire()
 	weaponCurrentlyHeld->StopShooting();
 }
 
-void AShooterSandboxCharacter::AlternateAction()
+void AShooterSandboxCharacter::InitiateAlternateAction()
 {
 	if (weaponCurrentlyHeld) {
 		WeaponAltMode();
@@ -810,11 +821,53 @@ void AShooterSandboxCharacter::AlternateAction()
 	AGrabbable* fetchedGrab;
 	if (GetGrabbableInVicinity(fetchedGrab))
 	{
-		//FString msg = "Pulled " + fetchedGrab->GetName();
-		//myHUD->ShowNotificationMessage(msg);
-
-		fetchedGrab->grabManager->PlayerWantsGrabbable(this, fetchedGrab);
+		if (fetchedGrab->grabManager)
+		{
+			Server_AttemptGrab(fetchedGrab);
+		}
 	}
+}
+
+void AShooterSandboxCharacter::ExecuteAlternateAction()
+{
+	if (!heldGrabbable)
+	{
+		return;
+	}
+
+	if (!heldGrabbable->isThrowable)
+	{
+		//JUST DROP THE OBJECT
+		UKismetSystemLibrary::PrintString(this, (TEXT("ITS NOT THROWABLE")));
+
+		return;
+	}
+
+	FHitResult outHit;
+
+	FVector start = FollowCamera->GetComponentLocation();
+	FVector fwd = FollowCamera->GetForwardVector();
+	FVector end = ((fwd * GRABBABLE_THROW_DISTANCE) + start);
+
+	FCollisionQueryParams CollisionParams;
+
+
+	if (GetWorld()->LineTraceSingleByChannel(outHit, start, end, ECC_Visibility, CollisionParams))
+	{
+		Server_FireGrabbable(outHit.ImpactPoint - heldGrabbable->GetActorLocation());
+	}
+}
+
+bool AShooterSandboxCharacter::Server_FireGrabbable_Validate(FVector direction)
+{
+	return true;
+}
+
+void AShooterSandboxCharacter::Server_FireGrabbable_Implementation(FVector direction)
+{
+	heldGrabbable->CancelGrabMotion();
+	heldGrabbable->FireInDirection(direction);
+	heldGrabbable->ApplyVisualChangesUponFire();
 }
 
 void AShooterSandboxCharacter::WeaponAltMode()
@@ -855,6 +908,11 @@ void AShooterSandboxCharacter::Server_AttemptControlOffensiveConstruct_Implement
 	constructToControl->Multicast_ControlOffensive(controllerController);
 }
 
+void AShooterSandboxCharacter::Server_AttemptGrab_Implementation(AGrabbable * grabee)
+{
+	grabee->grabManager->PlayerWantsGrabbable(this, grabee);
+}
+
 bool AShooterSandboxCharacter::GetGrabbableInVicinity(AGrabbable* &grab)
 {
 	TArray<AActor*> foundGrabbables;
@@ -874,6 +932,11 @@ bool AShooterSandboxCharacter::GetGrabbableInVicinity(AGrabbable* &grab)
 	return false;
 }
 
+AGrabbable* AShooterSandboxCharacter::GetGrabbableInHand()
+{
+	return heldGrabbable;
+}
+
 float AShooterSandboxCharacter::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
 {
 	if (!HasAuthority() || DamageCauser == nullptr || EventInstigator == nullptr || !myPlayerState)
@@ -891,7 +954,7 @@ float AShooterSandboxCharacter::TakeDamage(float DamageAmount, FDamageEvent cons
 		Client_DisbalanceBar();
 		if (currentBalance == 0)
 		{
-			DropEnergyPack();
+			Server_DropEnergyPack();
 		}
 	}
 	else

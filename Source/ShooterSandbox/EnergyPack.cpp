@@ -76,7 +76,7 @@ void AEnergyPack::OnOverlapBegan(UPrimitiveComponent * OverlappedComp, AActor * 
 	}
 
 	SetCantBePicked();
-	Cast<AShooterSandboxCharacter>(GetOwner())->PickupEnergyPack(this);
+	Cast<AShooterSandboxCharacter>(GetOwner())->Server_PickupEnergyPack(this);
 }
 
 void AEnergyPack::OnOverlapEnded(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex)

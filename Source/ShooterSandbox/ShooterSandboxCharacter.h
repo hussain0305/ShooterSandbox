@@ -33,7 +33,8 @@ public:
 	const float BUILD_DISTANCE = 1500;
 	const float GRAB_DISTANCE = 4500;
 	const float JETPACK_THRUST_COST = 10;
-
+	const float GRABBABLE_THROW_DISTANCE = 10000.f;
+	
 /********************************
 *       VARIABLES (1/2)         *
 ********************************/
@@ -125,16 +126,17 @@ public:
 
 	void StartWeaponFire();
 	void StopWeaponFire();
-	void AlternateAction();
+	void InitiateAlternateAction();
+	void ExecuteAlternateAction();
 	void WeaponAltMode();
 
 	void AttemptControlOffensiveConstruct();
 
 	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Gameplay")
-	void SetOffensiveConstructInVicinity(class ABaseOffensiveConstruct* construct);
+	void Client_SetOffensiveConstructInVicinity(class ABaseOffensiveConstruct* construct);
 
-	UFUNCTION(BlueprintCallable, Category = "Gameplay")
-	class ABaseOffensiveConstruct* GetOffensiveConstructInVicinity();
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Gameplay")
+	void Server_SetGrabbableInHand(class AGrabbable* grabbableInHand);
 
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Gameplay")
 	void Server_AttemptControlOffensiveConstruct(class ABaseOffensiveConstruct* constructToControl, class AShooterSandboxController* controllerController);
@@ -148,7 +150,15 @@ public:
 	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
 	void Client_UpdateWeaponAmmo(int max, int current);
 
+	UFUNCTION(Server, Reliable, Category = "Gameplay")
+	void Server_AttemptGrab(class AGrabbable* grabee);
+
+	UFUNCTION(BlueprintCallable, Category = "Gameplay")
+	class ABaseOffensiveConstruct* GetOffensiveConstructInVicinity();
+
 	bool GetGrabbableInVicinity(class AGrabbable* &grab);
+
+	class AGrabbable* GetGrabbableInHand();
 
 //=#=#=#=#= ENERGY FUNCTIONS =#=#=#=#=
 
@@ -166,22 +176,25 @@ public:
 	void Client_UpdateEnergyOnHUD();
 
 	UFUNCTION(Client, Unreliable)
-	void PlayerOutOfEnergy();
+	void Client_PlayerOutOfEnergy();
 
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
-	void PickupEnergyPack(class AEnergyPack* thePack);
+	void Server_PickupEnergyPack(class AEnergyPack* thePack);
 
 	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
 	void PickupEnergyPackOnOwningClient(class AEnergyPack* thePack);
 
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
-	void DropEnergyPack();
+	void Server_DropEnergyPack();
 
 	UFUNCTION(Client, Reliable, WithValidation, BlueprintCallable, Category = "Energy")
 	void DropEnergyPackOnOwningClient();
 
 	UFUNCTION(Client, Reliable, BlueprintCallable, Category = "Energy")
 	void Client_EnergyNotification(const FString& reason, int amount, int greenRedNeut);
+
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Grabbable")
+	void Server_FireGrabbable(FVector direction);
 
 //=#=#=#=#= HUD FUNCTIONS =#=#=#=#=
 
@@ -227,6 +240,9 @@ protected:
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
 	class AEnergyPack* myEnergyPack;
+
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
+	class AGrabbable* heldGrabbable;
 
 /********************************
 *       FUNCTIONS (2/2)         *

@@ -226,10 +226,12 @@ EMovementState AShooterSandboxCharacter::GetCurrentEMovementState()
 
 void AShooterSandboxCharacter::ToggleCrouch()
 {
-	if (bIsCrouched) {
+	if (bIsCrouched)
+	{
 		UnCrouch();
 	}
-	else {
+	else
+	{
 		Crouch();
 	}
 }
@@ -237,11 +239,13 @@ void AShooterSandboxCharacter::ToggleCrouch()
 void AShooterSandboxCharacter::ToggleRunOn()
 {
 	//Only continue if player isn't already running and doesn't have ADS
-	if (bIsRunning) {
+	if (bIsRunning)
+	{
 		return;
 	}
 
-	if (bIsFiringWeapon) {
+	if (bIsFiringWeapon)
+	{
 		return;
 	}
 
@@ -254,7 +258,8 @@ void AShooterSandboxCharacter::ToggleRunOn()
 void AShooterSandboxCharacter::ToggleRunOff()
 {
 	//Only continue if player is already running
-	if (!bIsRunning) {
+	if (!bIsRunning)
+	{
 		return;
 	}
 
@@ -266,7 +271,8 @@ void AShooterSandboxCharacter::ToggleRunOff()
 
 void AShooterSandboxCharacter::ToggleRunCamShake(bool startShake)
 {
-	if(!myController){
+	if(!myController)
+	{
 		return;
 	}
 
@@ -282,7 +288,8 @@ void AShooterSandboxCharacter::ToggleRunCamShake(bool startShake)
 
 void AShooterSandboxCharacter::CombinedJumpJetpackOn()
 {
-	if (!GetCharacterMovement()->IsFalling()) {
+	if (!GetCharacterMovement()->IsFalling())
+	{
 		Jump();
 		return;
 	}
@@ -837,9 +844,7 @@ void AShooterSandboxCharacter::ExecuteAlternateAction()
 
 	if (!heldGrabbable->isThrowable)
 	{
-		//JUST DROP THE OBJECT
-		UKismetSystemLibrary::PrintString(this, (TEXT("ITS NOT THROWABLE")));
-
+		Server_DropGrabbable();
 		return;
 	}
 
@@ -856,6 +861,10 @@ void AShooterSandboxCharacter::ExecuteAlternateAction()
 	{
 		Server_FireGrabbable(outHit.ImpactPoint - heldGrabbable->GetActorLocation());
 	}
+	else
+	{
+		Server_FireGrabbable((FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector() * 1000) - heldGrabbable->GetActorLocation());
+	}
 }
 
 bool AShooterSandboxCharacter::Server_FireGrabbable_Validate(FVector direction)
@@ -865,8 +874,20 @@ bool AShooterSandboxCharacter::Server_FireGrabbable_Validate(FVector direction)
 
 void AShooterSandboxCharacter::Server_FireGrabbable_Implementation(FVector direction)
 {
+	direction.Normalize();
+
 	heldGrabbable->CancelGrabMotion();
+	heldGrabbable->ApplyProjectileCollisionSettings();
 	heldGrabbable->FireInDirection(direction);
+	heldGrabbable->DestroyProjectileInSeconds(heldGrabbable->STANDARD_GRABBABLE_LIFETIME);
+	heldGrabbable->ApplyVisualChangesUponFire();
+}
+
+void AShooterSandboxCharacter::Server_DropGrabbable_Implementation()
+{
+	heldGrabbable->CancelGrabMotion();
+	heldGrabbable->Server_EnableProjectileGravity();
+	heldGrabbable->DestroyProjectileInSeconds(heldGrabbable->STANDARD_GRABBABLE_LIFETIME);
 	heldGrabbable->ApplyVisualChangesUponFire();
 }
 
@@ -1000,4 +1021,5 @@ void AShooterSandboxCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProper
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AShooterSandboxCharacter, myEnergyPack);
+	DOREPLIFETIME(AShooterSandboxCharacter, heldGrabbable);
 }

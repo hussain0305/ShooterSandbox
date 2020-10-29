@@ -25,7 +25,7 @@ public:
 
 	FTimerHandle countdownLife;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = Projectile)
 	class USphereComponent* CollisionComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
@@ -49,8 +49,14 @@ public:
 	UFUNCTION()
 	void OnProjectileHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	UFUNCTION(Server, Reliable)
+	void Server_EnableProjectileGravity();
+
 	UFUNCTION(Server, Reliable, WithValidation)
 	void DestroyProjectile();
+
+	UFUNCTION(Server, Reliable)
+	void DestroyProjectileInSeconds(float inSeconds);
 
 	UFUNCTION(Server, Reliable)
 	void InvalidateDeathTimer();

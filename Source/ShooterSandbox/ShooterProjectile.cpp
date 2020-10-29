@@ -90,6 +90,12 @@ void AShooterProjectile::OnProjectileHit(UPrimitiveComponent * HitComp, AActor *
 	}
 }
 
+void AShooterProjectile::Server_EnableProjectileGravity_Implementation()
+{
+	CollisionComponent->SetEnableGravity(true);
+	ProjectileMovementComponent->ProjectileGravityScale = 1;
+}
+
 void AShooterProjectile::InvalidateDeathTimer_Implementation()
 {
 	if (countdownLife.IsValid())
@@ -98,6 +104,20 @@ void AShooterProjectile::InvalidateDeathTimer_Implementation()
 		countdownLife.Invalidate();
 
 		UKismetSystemLibrary::PrintString(this, (TEXT("Invalidated projectile death")));
+	}
+}
+
+void AShooterProjectile::DestroyProjectileInSeconds_Implementation(float inSeconds)
+{
+	if (HasAuthority())
+	{
+		if (countdownLife.IsValid())
+		{
+			GetWorldTimerManager().ClearTimer(countdownLife);
+			countdownLife.Invalidate();
+		}
+
+		GetWorld()->GetTimerManager().SetTimer(countdownLife, this, &AShooterProjectile::DestroyProjectile, inSeconds, false);
 	}
 }
 

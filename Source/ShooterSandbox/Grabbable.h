@@ -24,11 +24,13 @@ protected:
 public:	
 
 	const float MOTION_PULSE = 0.033f;
+	const float STANDARD_GRABBABLE_LIFETIME = 4.0f;
 
 	float grabLerpAlpha;
 	class AShooterSandboxCharacter* grabberCharacter;
 	FTimerHandle grabMotion;
 
+	UPROPERTY(Replicated)
 	bool isThrowable;
 
 	class ALevelGrabbablesManager* grabManager;
@@ -46,6 +48,9 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void ApplyVisualChangesUponFire();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void BP_ApplyProjectileCollisionSettings();
 
 	void GrabMotion();
 

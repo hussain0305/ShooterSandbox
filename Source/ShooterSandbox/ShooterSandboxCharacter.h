@@ -196,6 +196,9 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Grabbable")
 	void Server_FireGrabbable(FVector direction);
 
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Grabbable")
+	void Server_DropGrabbable();
+
 //=#=#=#=#= HUD FUNCTIONS =#=#=#=#=
 
 	UFUNCTION(Client, Reliable, BlueprintCallable, Category = "Messaging System")

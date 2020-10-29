@@ -7,6 +7,7 @@
 #include "LevelGrabbablesManager.h"
 #include "ShooterSandboxCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 
 AGrabbable::AGrabbable()
@@ -26,6 +27,7 @@ void AGrabbable::BeginPlay()
 
 void AGrabbable::ApplyProjectileCollisionSettings()
 {
+	BP_ApplyProjectileCollisionSettings();
 }
 
 
@@ -79,4 +81,10 @@ void AGrabbable::SetGrabManager_Implementation(ALevelGrabbablesManager* grabMan)
 	grabManager = grabMan;
 }
 
+void AGrabbable::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AGrabbable, isThrowable);
+}
 

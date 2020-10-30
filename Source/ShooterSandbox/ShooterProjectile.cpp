@@ -40,11 +40,6 @@ void AShooterProjectile::BeginPlay()
 	{
 		GetWorld()->GetTimerManager().SetTimer(countdownLife, this, &AShooterProjectile::DestroyProjectile, lifetime, false);
 	}
-
-	/*else
-	{
-		GetWorld()->GetTimerManager().SetTimer(countdownLife, this, &AShooterProjectile::Local_DestroyProjectile, lifetime, false);
-	}*/
 }
 
 void AShooterProjectile::FireInDirection(FVector shootDirection)
@@ -102,8 +97,6 @@ void AShooterProjectile::InvalidateDeathTimer_Implementation()
 	{
 		GetWorldTimerManager().ClearTimer(countdownLife);
 		countdownLife.Invalidate();
-
-		UKismetSystemLibrary::PrintString(this, (TEXT("Invalidated projectile death")));
 	}
 }
 
@@ -133,7 +126,5 @@ bool AShooterProjectile::DestroyProjectile_Validate()
 
 void AShooterProjectile::DestroyProjectile_Implementation()
 {
-	UKismetSystemLibrary::PrintString(this, (TEXT("PROJECTILE WAS DESTROYED")));
-
 	Destroy(this);
 }

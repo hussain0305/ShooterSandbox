@@ -33,6 +33,11 @@ void AGrabbable::ApplyProjectileCollisionSettings()
 
 void AGrabbable::MoveTowardsSocket_Implementation(AShooterSandboxCharacter* grabber)
 {
+	if (!grabber)
+	{
+		return;
+	}
+
 	grabberCharacter = grabber;
 	grabLerpAlpha = 0.0f;
 
@@ -47,33 +52,32 @@ void AGrabbable::GrabMotion()
 {
 	if (isThrowable) 
 	{
-		if (FVector::Dist(GetActorLocation(), grabberCharacter->GetMesh()->GetSocketLocation("GrabSocket")) > 100) 
+		if (grabMotion.IsValid())
 		{
-			isThrowable = false;
-			grabLerpAlpha = 0.766f;
-		}
-		else
-		{
-			return;
+			GetWorldTimerManager().ClearTimer(grabMotion);
+			grabMotion.Invalidate();
 		}
 
+		return;
 	}
+
 	SetActorLocation(FMath::Lerp(GetActorLocation(), grabberCharacter->GetMesh()->GetSocketLocation("GrabSocket"), grabLerpAlpha));
-	grabLerpAlpha += MOTION_PULSE;
 
 	if (grabLerpAlpha >= 1.0f)
 	{
 		isThrowable = true;
+
+		AttachToComponent(grabberCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("GrabSocket"));
+
+		return;
 	}
+
+	grabLerpAlpha += MOTION_PULSE;
 }
 
 void AGrabbable::CancelGrabMotion()
 {
-	if (grabMotion.IsValid())
-	{
-		GetWorldTimerManager().ClearTimer(grabMotion);
-		grabMotion.Invalidate();
-	}
+	this->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 }
 
 void AGrabbable::SetGrabManager_Implementation(ALevelGrabbablesManager* grabMan)

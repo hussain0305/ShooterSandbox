@@ -23,7 +23,7 @@ protected:
 
 public:	
 
-	const float MOTION_PULSE = 0.033f;
+	const float MOTION_PULSE = 0.016f;
 	const float STANDARD_GRABBABLE_LIFETIME = 4.0f;
 
 	float grabLerpAlpha;

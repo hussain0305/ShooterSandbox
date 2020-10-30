@@ -33,7 +33,7 @@ public:
 	const float BUILD_DISTANCE = 1500;
 	const float GRAB_DISTANCE = 4500;
 	const float JETPACK_THRUST_COST = 10;
-	const float GRABBABLE_THROW_DISTANCE = 10000.f;
+	const float GRABBABLE_THROW_DISTANCE = 20000.f;
 	
 /********************************
 *       VARIABLES (1/2)         *

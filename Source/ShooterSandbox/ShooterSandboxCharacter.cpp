@@ -863,7 +863,7 @@ void AShooterSandboxCharacter::ExecuteAlternateAction()
 	}
 	else
 	{
-		Server_FireGrabbable((FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector() * 1000) - heldGrabbable->GetActorLocation());
+		Server_FireGrabbable((FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector() * GRABBABLE_THROW_DISTANCE) - heldGrabbable->GetActorLocation());
 	}
 }
 

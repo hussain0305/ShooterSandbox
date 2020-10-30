@@ -58,6 +58,11 @@ bool ALevelGrabbablesManager::PlayerWantsGrabbable_Validate(AShooterSandboxChara
 
 void ALevelGrabbablesManager::PlayerWantsGrabbable_Implementation(AShooterSandboxCharacter* grabber, AGrabbable * grab)
 {
+	if (!grabber || !grab)
+	{
+		return;
+	}
+
 	//Cancel this grabbale's auto-death
 	grab->InvalidateDeathTimer();
 

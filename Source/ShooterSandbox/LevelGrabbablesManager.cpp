@@ -47,7 +47,6 @@ void ALevelGrabbablesManager::SpawnSome()
 			loc, FRotator::ZeroRotator, spawnParams);
 
 		spawnedGrabbable->SetGrabManager(this);
-		//spawnedGrabbable->grabManager = this;
 	}
 }
 
@@ -63,7 +62,7 @@ void ALevelGrabbablesManager::PlayerWantsGrabbable_Implementation(AShooterSandbo
 		return;
 	}
 
-	//Cancel this grabbale's auto-death
+	//Cancel this grabbable's auto-death
 	grab->InvalidateDeathTimer();
 
 	//Sort out owner properties

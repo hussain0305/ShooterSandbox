@@ -40,7 +40,7 @@ public:
 
 	void ApplyProjectileCollisionSettings();
 
-	UFUNCTION(Server, Reliable)
+	UFUNCTION(NetMulticast, Reliable)
 	void MoveTowardsSocket(class AShooterSandboxCharacter* grabber);
 
 	UFUNCTION(BlueprintImplementableEvent)

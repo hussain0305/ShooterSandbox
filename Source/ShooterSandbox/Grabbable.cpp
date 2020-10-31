@@ -41,7 +41,7 @@ void AGrabbable::MoveTowardsSocket_Implementation(AShooterSandboxCharacter* grab
 	grabberCharacter = grabber;
 	grabLerpAlpha = 0.0f;
 
-	if (HasAuthority() && grabberCharacter)
+	if (grabberCharacter)//HasAuthority() && 
 	{
 		GetWorld()->GetTimerManager().SetTimer(grabMotion, this, &AGrabbable::GrabMotion, MOTION_PULSE, true);
 	}

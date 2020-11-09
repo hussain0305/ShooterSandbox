@@ -84,4 +84,8 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_DestroyConstruct();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void BP_BlockifyConstruct();
+
+	void DelayedDestroy();
 };

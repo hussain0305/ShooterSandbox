@@ -69,12 +69,13 @@ void ABaseConstruct::DestroyConstruct()
 		Multicast_DestroyConstruct();
 	}
 
-	Destroy(this);
+	FTimerHandle destructionCountdown;
+	GetWorld()->GetTimerManager().SetTimer(destructionCountdown, this, &ABaseConstruct::DelayedDestroy, 0.1f, false);
 }
 
 void ABaseConstruct::Multicast_DestroyConstruct_Implementation()
 {
-	TArray<UStaticMeshComponent*> allStaticMeshes;
+	/*TArray<UStaticMeshComponent*> allStaticMeshes;
 	Cast<AActor>(this)->GetComponents<UStaticMeshComponent>(allStaticMeshes);
 
 	FActorSpawnParameters spawnParams;
@@ -84,8 +85,10 @@ void ABaseConstruct::Multicast_DestroyConstruct_Implementation()
 		GetActorLocation() + allStaticMeshes[0]->GetRelativeLocation(),
 		GetActorRotation(), spawnParams);
 
-	spawnedDestruction->DestroyConstruct(allStaticMeshes[0]->GetRelativeScale3D(), Cast<UMaterialInstance>(allStaticMeshes[0]->GetMaterial(0)), destructionExplosionStrength, scaleFactor);
+	spawnedDestruction->DestroyConstruct(allStaticMeshes[0]->GetRelativeScale3D(), Cast<UMaterialInstance>(allStaticMeshes[0]->GetMaterial(0)), 
+		destructionExplosionStrength, scaleFactor);*/
 
+	BP_BlockifyConstruct();
 }
 
 void ABaseConstruct::RefreshAppearance()
@@ -132,6 +135,11 @@ void ABaseConstruct::FormationScaling(FVector current, FVector fullScale, float 
 		scalingDelegate.BindUFunction(this, FName("FormationScaling"), Cast<AActor>(this)->GetActorScale3D(), fullScale, alpha + 0.05f);
 		GetWorld()->GetTimerManager().SetTimer(scalingUp, scalingDelegate, 0.025f, false);
 	}
+}
+
+void ABaseConstruct::DelayedDestroy()
+{
+	Destroy(this);
 }
 
 void ABaseConstruct::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const 

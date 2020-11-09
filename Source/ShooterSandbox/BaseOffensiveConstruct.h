@@ -91,7 +91,7 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* constructBase;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UStaticMeshComponent* rotatingConstructPart;
 
 	UPROPERTY(VisibleAnywhere)

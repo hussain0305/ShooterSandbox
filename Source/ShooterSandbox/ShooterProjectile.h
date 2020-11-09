@@ -34,7 +34,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 	float lifetime;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
 	int damage;
 
 	UPROPERTY(VisibleAnywhere, Category = Movement)

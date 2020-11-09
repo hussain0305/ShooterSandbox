@@ -70,12 +70,14 @@ void ABaseConstruct::DestroyConstruct()
 	}
 
 	FTimerHandle destructionCountdown;
-	GetWorld()->GetTimerManager().SetTimer(destructionCountdown, this, &ABaseConstruct::DelayedDestroy, 0.1f, false);
+	GetWorld()->GetTimerManager().SetTimer(destructionCountdown, this, &ABaseConstruct::DelayedDestroy, 0.2f, false);
 }
 
 void ABaseConstruct::Multicast_DestroyConstruct_Implementation()
 {
-	/*TArray<UStaticMeshComponent*> allStaticMeshes;
+	BP_BlockifyConstruct();
+	
+	TArray<UStaticMeshComponent*> allStaticMeshes;
 	Cast<AActor>(this)->GetComponents<UStaticMeshComponent>(allStaticMeshes);
 
 	FActorSpawnParameters spawnParams;
@@ -86,9 +88,8 @@ void ABaseConstruct::Multicast_DestroyConstruct_Implementation()
 		GetActorRotation(), spawnParams);
 
 	spawnedDestruction->DestroyConstruct(allStaticMeshes[0]->GetRelativeScale3D(), Cast<UMaterialInstance>(allStaticMeshes[0]->GetMaterial(0)), 
-		destructionExplosionStrength, scaleFactor);*/
+		destructionExplosionStrength, scaleFactor);
 
-	BP_BlockifyConstruct();
 }
 
 void ABaseConstruct::RefreshAppearance()

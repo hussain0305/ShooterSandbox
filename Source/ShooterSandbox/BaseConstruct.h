@@ -51,13 +51,8 @@ public:
 	bool shouldForm;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Destruction")
-	float destructionExplosionStrength;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Destruction")
 	TSubclassOf<class AEConstructDestruction> destructionBP;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Destruction")
-	float scaleFactor = 1;
 
 /**************************
 *       FUNCTIONS         *
@@ -71,7 +66,7 @@ public:
 
 	class AShooterSandboxController* GetConstructedBy();
 
-	virtual void DestroyConstruct();
+	virtual void DestroyConstruct(int lowMidHigh);
 
 	UFUNCTION(BlueprintCallable, Category = "Materials")
 	void RefreshAppearance();
@@ -82,10 +77,5 @@ public:
 //=#=#=#=#= SERVER FUNCTIONS =#=#=#=#=
 
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_DestroyConstruct();
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void BP_BlockifyConstruct();
-
-	void DelayedDestroy();
+	void Multicast_DestroyConstruct(int lowMidHigh);
 };

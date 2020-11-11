@@ -20,6 +20,7 @@ ABaseConstruct::ABaseConstruct()
 void ABaseConstruct::BeginPlay()
 {
 	Super::BeginPlay();
+
 	health = maxHealth;
 
 	RefreshAppearance();
@@ -41,7 +42,8 @@ float ABaseConstruct::TakeDamage(float DamageAmount, FDamageEvent const & Damage
 	{
 		Cast<AShooterSandboxPlayerState>(EventInstigator->PlayerState)->HasBrokenConstruct(maxHealth);
 		Cast<AShooterSandboxController>(EventInstigator)->ProxyForHUD_ByCommandCode(EHUDCommandType::PlayHitAnimation);
-		DestroyConstruct();
+		int lmh = DamageAmount < 50 ? 1 : DamageAmount < 100 ? 2 : 3;
+		DestroyConstruct(lmh);
 	}
 
 	return health;
@@ -57,7 +59,7 @@ AShooterSandboxController* ABaseConstruct::GetConstructedBy()
 	return constructedBy;
 }
 
-void ABaseConstruct::DestroyConstruct()
+void ABaseConstruct::DestroyConstruct(int lowMidHigh)
 {
 	if (Role < ROLE_Authority)
 	{
@@ -66,16 +68,15 @@ void ABaseConstruct::DestroyConstruct()
 
 	if (destructionBP)
 	{
-		Multicast_DestroyConstruct();
+		Multicast_DestroyConstruct(lowMidHigh);
 	}
 
-	FTimerHandle destructionCountdown;
-	GetWorld()->GetTimerManager().SetTimer(destructionCountdown, this, &ABaseConstruct::DelayedDestroy, 0.2f, false);
+	Destroy(this);
 }
 
-void ABaseConstruct::Multicast_DestroyConstruct_Implementation()
+void ABaseConstruct::Multicast_DestroyConstruct_Implementation(int lowMidHigh)
 {
-	BP_BlockifyConstruct();
+	//BP_BlockifyConstruct();
 	
 	TArray<UStaticMeshComponent*> allStaticMeshes;
 	Cast<AActor>(this)->GetComponents<UStaticMeshComponent>(allStaticMeshes);
@@ -83,12 +84,10 @@ void ABaseConstruct::Multicast_DestroyConstruct_Implementation()
 	FActorSpawnParameters spawnParams;
 	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	AEConstructDestruction* spawnedDestruction = GetWorld()->SpawnActor<AEConstructDestruction>(destructionBP,
-		GetActorLocation() + allStaticMeshes[0]->GetRelativeLocation(),
-		GetActorRotation(), spawnParams);
+	AEConstructDestruction* spawnedDestruction = GetWorld()->SpawnActor<AEConstructDestruction>(
+		destructionBP, GetActorLocation() + allStaticMeshes[0]->GetRelativeLocation(), GetActorRotation(), spawnParams);
 
-	spawnedDestruction->DestroyConstruct(allStaticMeshes[0]->GetRelativeScale3D(), Cast<UMaterialInstance>(allStaticMeshes[0]->GetMaterial(0)), 
-		destructionExplosionStrength, scaleFactor);
+	spawnedDestruction->DestroyConstruct(Cast<UMaterialInstance>(allStaticMeshes[0]->GetMaterial(0)), lowMidHigh);
 
 }
 
@@ -136,11 +135,6 @@ void ABaseConstruct::FormationScaling(FVector current, FVector fullScale, float 
 		scalingDelegate.BindUFunction(this, FName("FormationScaling"), Cast<AActor>(this)->GetActorScale3D(), fullScale, alpha + 0.05f);
 		GetWorld()->GetTimerManager().SetTimer(scalingUp, scalingDelegate, 0.025f, false);
 	}
-}
-
-void ABaseConstruct::DelayedDestroy()
-{
-	Destroy(this);
 }
 
 void ABaseConstruct::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const 

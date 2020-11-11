@@ -18,8 +18,17 @@ void AEConstructDestruction::BeginPlay()
 	Super::BeginPlay();
 }
 
-void AEConstructDestruction::DestroyConstruct(FVector scale, UMaterialInstance* materialToApply, float forceVal, float scaleFactor)
+void AEConstructDestruction::DestroyConstruct(UMaterialInstance* materialToApply, int lowMidHigh)
 {
-	ConstructDestruction(scale, materialToApply, forceVal, scaleFactor);
+	ConstructDestruction(materialToApply, lowMidHigh);
+
+	FTimerHandle vfxCountdown;
+	GetWorld()->GetTimerManager().SetTimer(vfxCountdown, this, &AEConstructDestruction::DestroyVFX, 4.0f, false);
+
+}
+
+void AEConstructDestruction::DestroyVFX()
+{
+	Destroy(this);
 }
 

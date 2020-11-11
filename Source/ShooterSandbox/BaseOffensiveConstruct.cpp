@@ -146,7 +146,7 @@ void ABaseOffensiveConstruct::OnOverlapEnded(UPrimitiveComponent * OverlappedCom
 	}
 }
 
-void ABaseOffensiveConstruct::DestroyConstruct()
+void ABaseOffensiveConstruct::DestroyConstruct(int lowMidHigh)
 {
 	if (Role < ROLE_Authority)
 	{
@@ -157,18 +157,18 @@ void ABaseOffensiveConstruct::DestroyConstruct()
 
 	if (destructionBP)
 	{
-		Multicast_DestroyConstruct();
+		Multicast_DestroyConstruct(lowMidHigh);
 	}
 
 	Destroy(this);
 }
 
-bool ABaseOffensiveConstruct::Multicast_ControlOffensive_Validate(AShooterSandboxController * occupantController)
+bool ABaseOffensiveConstruct::Multicast_ControlOffensive_Validate(AShooterSandboxController* occupantController)
 {
 	return true;
 }
 
-void ABaseOffensiveConstruct::Multicast_ControlOffensive_Implementation(AShooterSandboxController * occupantController)
+void ABaseOffensiveConstruct::Multicast_ControlOffensive_Implementation(AShooterSandboxController* occupantController)
 {
 	isBeingUsed = true;
 	

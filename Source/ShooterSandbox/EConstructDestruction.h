@@ -21,8 +21,10 @@ protected:
 
 public:	
 
-	void DestroyConstruct(FVector scale, class UMaterialInstance* materialToApply, float forceVal, float scaleFactor);
+	void DestroyConstruct(class UMaterialInstance* materialToApply, int lowMidHigh);
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void ConstructDestruction(FVector scale, class UMaterialInstance* materialToApply, float forceVal, float scaleFactor);
+	void ConstructDestruction(class UMaterialInstance* materialToApply, int lowMidHigh);
+
+	void DestroyVFX();
 };

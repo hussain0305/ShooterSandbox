@@ -65,9 +65,9 @@ void AGrabbable::GrabMotion()
 
 	if (grabLerpAlpha >= 1.0f)
 	{
-		isThrowable = true;
-
 		AttachToComponent(grabberCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("GrabSocket"));
+
+		isThrowable = true;
 
 		return;
 	}
@@ -77,6 +77,12 @@ void AGrabbable::GrabMotion()
 
 void AGrabbable::CancelGrabMotion()
 {
+	if (grabMotion.IsValid())
+	{
+		GetWorldTimerManager().ClearTimer(grabMotion);
+		grabMotion.Invalidate();
+	}
+
 	this->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 }
 

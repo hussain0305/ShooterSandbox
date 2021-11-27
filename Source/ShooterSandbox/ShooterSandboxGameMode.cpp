@@ -7,9 +7,11 @@
 #include "EnergyPack.h"
 #include "ShooterSandboxPlayerState.h"
 #include "ConstructibleSurface.h"
+#include "ConstructibleWall.h"
 #include "AShooterSandboxHUD.h"
 #include "ShooterSandboxGameState.h"
 #include "ShooterSandboxController.h"
+#include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerStart.h"
@@ -132,25 +134,165 @@ void AShooterSandboxGameMode::Server_GiveEnergyToPlayers()
 	}
 }
 
-void AShooterSandboxGameMode::Server_SpawnConstruct(TSubclassOf<ABaseConstruct> construct, AConstructibleSurface* surfaceToSpawnOn, AShooterSandboxController* playerController, FVector spawnPosition, FRotator spawnRotation)
+bool AShooterSandboxGameMode::GetSpawnLocationAndRotation(FVector &spawnLocation, FRotator &spawnRotation, AConstructibleSurface* &surfaceToSpawnOn, bool canBeParented, FString& constructName, AShooterSandboxCharacter* spawnerPlayer)
+{
+	if (!GetWorld()) {
+		return false;
+	}
+
+	surfaceToSpawnOn = nullptr;
+
+	if (spawnerPlayer->currentConstructionMode == EConstructionMode::Surface)
+	{
+		FCollisionQueryParams traceParams;
+		traceParams.AddIgnoredActor(spawnerPlayer);
+
+		FHitResult hit;
+
+		if (GetWorld()->LineTraceSingleByObjectType(hit, spawnerPlayer->FollowCamera->GetComponentLocation(),
+			(spawnerPlayer->FollowCamera->GetComponentLocation() + (spawnerPlayer->FollowCamera->GetForwardVector() * BUILD_DISTANCE)),
+			ECC_GameTraceChannel1, traceParams)) {
+
+			if (Cast<AConstructibleSurface>(hit.Actor))
+			{
+				if (Cast<AConstructibleSurface>(hit.Actor)->requiresParenting && !canBeParented)
+				{
+					spawnerPlayer->Client_SendAlertMessage_Implementation("Can't construct " + constructName + " on " + Cast<AConstructibleSurface>(hit.Actor)->constructName);
+					return false;
+				}
+				spawnLocation = hit.ImpactPoint;
+
+				float gridSize = Cast<AConstructibleSurface>(hit.Actor)->gridSizeInUnits;
+				int gridNoX = spawnLocation.X / gridSize;
+				int gridNoY = spawnLocation.Y / gridSize;
+
+				float gridAlignedX = (gridNoX * gridSize) + (spawnLocation.X < 0 ? -gridSize / 2 : gridSize / 2);
+				float gridAlignedY = (gridNoY * gridSize) + (spawnLocation.Y < 0 ? -gridSize / 2 : gridSize / 2);
+
+				spawnLocation = FVector(gridAlignedX, gridAlignedY, spawnLocation.Z);
+				spawnRotation = spawnerPlayer->GetActorRotation();
+				surfaceToSpawnOn = Cast<AConstructibleSurface>(hit.Actor);
+
+				return true;
+			}
+			else
+			{
+				spawnerPlayer->Client_SendAlertMessage_Implementation("Aim at a constructible floor to build");
+			}
+		}
+
+		else
+		{
+			spawnerPlayer->Client_SendAlertMessage_Implementation("Aim at a constructible floor nearby to build");
+		}
+
+	}
+
+	else //if construction mode == wall
+	{
+		FCollisionQueryParams traceParams;
+		traceParams.AddIgnoredActor(spawnerPlayer);
+
+		FHitResult hit;
+
+		if (GetWorld()->LineTraceSingleByObjectType(hit, spawnerPlayer->FollowCamera->GetComponentLocation(),
+			(spawnerPlayer->FollowCamera->GetComponentLocation() + (spawnerPlayer->FollowCamera->GetForwardVector() * BUILD_DISTANCE)),
+			ECC_GameTraceChannel7, traceParams)) {
+
+			if (Cast<AConstructibleWall>(hit.Actor))
+			{
+				spawnLocation = hit.ImpactPoint;
+
+				float gridSize = Cast<AConstructibleWall>(hit.Actor)->gridSizeInUnits;
+				float padding = Cast<AConstructibleWall>(hit.Actor)->gridBuildPadding;
+
+				//if HitNormal has X=1, positioning will be along X
+				//if HitNormal has Y=1, positioning will be along Y
+
+				int gridNoZ = spawnLocation.Z / gridSize;
+				float gridAlignedZ = (gridNoZ * gridSize) + (spawnLocation.Z < 0 ? -gridSize / 2 : gridSize / 2);
+
+				int gridNoXY;
+				float gridAlignedXY;
+
+				if (hit.ImpactNormal.Y == 1 || hit.ImpactNormal.Y == -1)
+				{
+					gridNoXY = spawnLocation.X / gridSize;
+					gridAlignedXY = (gridNoXY * gridSize) + (spawnLocation.X < 0 ? -gridSize / 2 : gridSize / 2);
+					spawnLocation = FVector(gridAlignedXY, spawnLocation.Y - (hit.ImpactNormal.Y * padding), gridAlignedZ);
+				}
+				else
+				{
+					gridNoXY = spawnLocation.Y / gridSize;
+					gridAlignedXY = (gridNoXY * gridSize) + (spawnLocation.Y < 0 ? -gridSize / 2 : gridSize / 2);
+					spawnLocation = FVector(spawnLocation.X - (hit.ImpactNormal.X * padding), gridAlignedXY, gridAlignedZ);
+				}
+
+				spawnRotation = hit.ImpactNormal.Rotation();
+
+				return true;
+			}
+			else
+			{
+				spawnerPlayer->Client_SendAlertMessage_Implementation("Aim at a constructible wall to build");
+			}
+		}
+
+		else
+		{
+			spawnerPlayer->Client_SendAlertMessage_Implementation("Aim at a constructible wall nearby to build");
+		}
+	}
+
+	spawnLocation = FVector::ZeroVector;
+	spawnRotation = FRotator::ZeroRotator;
+
+	return false;
+}
+
+void AShooterSandboxGameMode::PlaceNewConstructRequest(AShooterSandboxCharacter * spawnerPlayer, AShooterSandboxController * playerController, FName constructRowName, int playerEnergyBalance)
+{
+	FConstructsDatabase* databaseRow;
+	GetConstructDetails(constructRowName, databaseRow);
+
+	FVector spawnLocation;
+	FRotator spawnRotation;
+	AConstructibleSurface* surfaceToSpawnOn;
+
+	if (databaseRow->constructionCost > playerEnergyBalance)
+	{
+		spawnerPlayer->Client_PlayerOutOfEnergy();
+		return;
+	}
+
+	if (GetSpawnLocationAndRotation(spawnLocation, spawnRotation, surfaceToSpawnOn, databaseRow->constructBP.GetDefaultObject()->canBeParented, databaseRow->constructName, spawnerPlayer))
+	{
+		Server_SpawnConstruct(constructRowName, surfaceToSpawnOn, playerController, spawnLocation, spawnRotation);
+	}
+
+}
+
+void AShooterSandboxGameMode::Server_SpawnConstruct(FName constructRowName, AConstructibleSurface* surfaceToSpawnOn, AShooterSandboxController* playerController, FVector spawnPosition, FRotator spawnRotation)
 {
 	UWorld* world = GetWorld();
+	FConstructsDatabase* fetchedConstruct;
+	GetConstructDetails(constructRowName, fetchedConstruct);
 
-	if (world == nullptr || construct == nullptr || playerController == nullptr)
+	if (world == nullptr || fetchedConstruct->constructBP == nullptr || playerController == nullptr)
 	{
 		return;
 	}
 
 	//Raise the construct up slightly so it doesn't collide with the building floor
-	spawnPosition += construct.GetDefaultObject()->GetActorUpVector() * 1;
-	spawnRotation = construct.GetDefaultObject()->isGridAligned ? GetAlignedRotation(spawnRotation) : spawnRotation;
+	spawnPosition += FVector::UpVector * 1;
+	spawnRotation = fetchedConstruct->constructBP.GetDefaultObject()->isGridAligned ? GetAlignedRotation(spawnRotation) : spawnRotation;
 
 	FActorSpawnParameters spawnParams; 
 	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
 	spawnParams.Owner = playerController->GetCharacter(); 
 	spawnParams.Instigator = playerController->GetPawn();
 	
-	ABaseConstruct* spawnedConstruct = world->SpawnActor<ABaseConstruct>(construct, spawnPosition, spawnRotation, spawnParams);
+	ABaseConstruct* spawnedConstruct = world->SpawnActor<ABaseConstruct>(fetchedConstruct->constructBP, spawnPosition, spawnRotation, spawnParams);
 
 	if (spawnedConstruct)
 	{
@@ -160,10 +302,10 @@ void AShooterSandboxGameMode::Server_SpawnConstruct(TSubclassOf<ABaseConstruct> 
 		}
 
 		spawnedConstruct->SetConstructedBy(playerController);
-		playerController->PostConstructionUpdate(construct);
+		playerController->PostConstructionUpdate(spawnedConstruct->constructName, spawnedConstruct->constructionCost);
 
-		Cast<AShooterSandboxCharacter>(playerController->GetCharacter())->Server_SpendEnergy(construct.GetDefaultObject()->constructionCost, MAX_ENERGY_AMOUNT);
-		Cast<AShooterSandboxPlayerState>(playerController->PlayerState)->HasConstructed(construct.GetDefaultObject()->constructionCost);
+		Cast<AShooterSandboxCharacter>(playerController->GetCharacter())->Server_SpendEnergy(fetchedConstruct->constructionCost, MAX_ENERGY_AMOUNT);
+		Cast<AShooterSandboxPlayerState>(playerController->PlayerState)->HasConstructed(fetchedConstruct->constructionCost);
 	}
 	else
 	{
@@ -205,5 +347,42 @@ FRotator AShooterSandboxGameMode::GetAlignedRotation(FRotator rawRotation)
 	}
 
 	return FRotator(rawRotation.Pitch, 179.5f, rawRotation.Roll);
-
 }
+
+bool AShooterSandboxGameMode::GetConstructDetails(FName rowName, FConstructsDatabase*& databaseRow)
+{
+	FString contextString;
+	databaseRow = constructsDataTable->FindRow<FConstructsDatabase>(rowName, contextString);
+	if (databaseRow)
+	{
+		return true;
+	}
+	return false;
+}
+
+int AShooterSandboxGameMode::GetConstructCost(FName rowName)
+{
+	FString contextString;
+	FConstructsDatabase* databaseRow;
+
+	databaseRow = constructsDataTable->FindRow<FConstructsDatabase>(rowName, contextString);
+	if (databaseRow)
+	{
+		return databaseRow->constructionCost;
+	}
+	return -1;
+}
+
+FString& AShooterSandboxGameMode::GetConstructName(FName rowName)
+{
+	FString contextString;
+	FConstructsDatabase* databaseRow;
+
+	databaseRow = constructsDataTable->FindRow<FConstructsDatabase>(rowName, contextString);
+	if (databaseRow)
+	{
+		return databaseRow->constructName;
+	}
+	return contextString;
+}
+

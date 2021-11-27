@@ -21,16 +21,15 @@ class AShooterSandboxCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
 
+public:
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
-
-public:
 
 /****************************
 *          CONSTANTS        *
 ****************************/
 
-	const float BUILD_DISTANCE = 1500;
 	const float GRAB_DISTANCE = 4500;
 	const float JETPACK_THRUST_COST = 10;
 	const float GRABBABLE_THROW_DISTANCE = 20000.f;
@@ -111,17 +110,11 @@ public:
 	void SwitchConstructionMode();
 
 	UFUNCTION(BlueprintCallable, Category = "Construction")
-	void TryConstruct(TSubclassOf<class ABaseConstruct> construct);
+	void TryConstruct(FName constructRowName);//TSubclassOf<class ABaseConstruct> construct
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Construction")
 	void TryQuickConstruct();
 	
-	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Construction")
-	void ServerConstruct(TSubclassOf<class ABaseConstruct> construct, class AConstructibleSurface* surfaceToSpawnOn, class AShooterSandboxController* constructorController, FVector spawnLocation, FRotator spawnRotation);
-
-	UFUNCTION(BlueprintCallable, Category = "Construction")
-	bool GetSpawnLocationAndRotation(FVector &spawnLocation, FRotator &spawnRotation, class AConstructibleSurface* &surfaceToSpawnOn, TSubclassOf<class ABaseConstruct> construct);
-
 //=#=#=#=#= OFFENSIVE FUNCTIONS =#=#=#=#=
 
 	void StartWeaponFire();
@@ -221,6 +214,8 @@ protected:
 /********************************
 *       VARIABLES (2/2)         *
 ********************************/
+
+	class AShooterSandboxGameMode* gameMode;
 
 	bool bIsRunning;
 	EMovementState previousMovementState;

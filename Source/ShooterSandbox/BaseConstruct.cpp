@@ -4,6 +4,7 @@
 #include "BaseConstruct.h"
 #include "ShooterSandboxController.h"
 #include "ShooterSandboxPlayerState.h"
+#include "ShooterSandboxGameMode.h"
 #include "Net/UnrealNetwork.h"
 #include "Components/StaticMeshComponent.h"
 #include "TimerManager.h"
@@ -24,6 +25,7 @@ void ABaseConstruct::BeginPlay()
 	health = maxHealth;
 
 	RefreshAppearance();
+	FetchConstructDetailsFromDatabase();
 }
 
 float ABaseConstruct::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
@@ -121,6 +123,16 @@ void ABaseConstruct::RefreshAppearance()
 
 	allStaticMeshes[0]->SetMaterial(0, appearanceOptions[FMath::RandRange(0, appearanceOptions.Num() - 1)]);
 
+}
+
+void ABaseConstruct::FetchConstructDetailsFromDatabase()
+{
+	FConstructsDatabase* databaseRow;
+	if (GetWorld()->GetAuthGameMode<AShooterSandboxGameMode>()->GetConstructDetails(FName(*constructRowName), databaseRow))
+	{
+		constructName = databaseRow->displayName;
+		constructionCost = databaseRow->constructionCost;
+	}
 }
 
 void ABaseConstruct::FormationScaling(FVector current, FVector fullScale, float alpha)

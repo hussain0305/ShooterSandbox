@@ -14,7 +14,8 @@ enum class EConstructType : uint8{
 	UtilityConstruct	UMETA(DisplayName = "Utility Construct"),
 	EnergyWeapon		UMETA(DisplayName = "Energy Weapon"),
 	HandledWeapon		UMETA(DisplayName = "Handled Weapon"),
-	Environmental		UMETA(DisplayName = "Environmental")
+	Environmental		UMETA(DisplayName = "Environmental"),
+	WallConstruct		UMETA(DisplayName = "Wall Construct")
 };
 
 UENUM(BlueprintType)
@@ -69,9 +70,6 @@ struct FConstructsDatabase : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int constructionCost;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool isGridAligned;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<ABaseConstruct> constructBP;

@@ -132,6 +132,8 @@ void AShooterSandboxCharacter::FetchPersistentComponents()
 	{
 		myHUD->SetConstructionMode(currentConstructionMode);
 	}
+
+	gameMode = GetWorld()->GetAuthGameMode<AShooterSandboxGameMode>();
 }
 
 #pragma region Movement Related
@@ -334,7 +336,11 @@ void AShooterSandboxCharacter::Jetpack_Implementation()
 	if (myPlayerState->GetEnergy() >= JETPACK_THRUST_COST)
 	{
 		GetCharacterMovement()->Velocity += FVector(0, 0, jetpackThrust);
-		Server_SpendEnergy(JETPACK_THRUST_COST, GetWorld()->GetAuthGameMode<AShooterSandboxGameMode>()->MAX_ENERGY_AMOUNT);
+		if (!gameMode) 
+		{
+			gameMode = GetWorld()->GetAuthGameMode<AShooterSandboxGameMode>();
+		}
+		Server_SpendEnergy(JETPACK_THRUST_COST, gameMode->MAX_ENERGY_AMOUNT);
 		Client_EnergyNotification("Jetpack Thrust", JETPACK_THRUST_COST, 1);
 	}
 	else
@@ -362,123 +368,6 @@ void AShooterSandboxCharacter::MouseWheelUp()
 	}
 
 	myHUD->ScrollUpList();
-}
-
-bool AShooterSandboxCharacter::GetSpawnLocationAndRotation(FVector &spawnLocation, FRotator &spawnRotation, class AConstructibleSurface* &surfaceToSpawnOn, TSubclassOf<class ABaseConstruct> construct)
-{
-	if (!GetWorld()){
-		return false;
-	}
-
-	surfaceToSpawnOn = nullptr;
-
-	if (currentConstructionMode == EConstructionMode::Surface)
-	{
-		FCollisionQueryParams traceParams;
-		traceParams.AddIgnoredActor(this);
-
-		FHitResult hit;
-
-		if (GetWorld()->LineTraceSingleByObjectType(hit, FollowCamera->GetComponentLocation(),
-			(FollowCamera->GetComponentLocation() + (FollowCamera->GetForwardVector() * BUILD_DISTANCE)),
-			ECC_GameTraceChannel1, traceParams)) {
-
-			if (Cast<AConstructibleSurface>(hit.Actor))
-			{
-				if (Cast<AConstructibleSurface>(hit.Actor)->requiresParenting && !construct.GetDefaultObject()->canBeParented)
-				{
-					myHUD->ShowNotificationMessage("Can't construct " + construct.GetDefaultObject()->constructName + " on " + Cast<AConstructibleSurface>(hit.Actor)->constructName);
-					return false;
-				}
-				spawnLocation = hit.ImpactPoint;
-
-				float gridSize = Cast<AConstructibleSurface>(hit.Actor)->gridSizeInUnits;
-				int gridNoX = spawnLocation.X / gridSize;
-				int gridNoY = spawnLocation.Y / gridSize;
-
-				float gridAlignedX = (gridNoX * gridSize) + (spawnLocation.X < 0 ? -gridSize / 2 : gridSize / 2);
-				float gridAlignedY = (gridNoY * gridSize) + (spawnLocation.Y < 0 ? -gridSize / 2 : gridSize / 2);
-
-				spawnLocation = FVector(gridAlignedX, gridAlignedY, spawnLocation.Z);
-				spawnRotation = GetActorRotation();
-				surfaceToSpawnOn = Cast<AConstructibleSurface>(hit.Actor);
-
-				return true;
-			}
-			else
-			{
-				myHUD->ShowNotificationMessage("Aim at a constructible floor to build");
-			}
-		}
-
-		else
-		{
-			myHUD->ShowNotificationMessage("Aim at a constructible floor nearby to build");
-		}
-
-	}
-
-	else //if construction mode == wall
-	{
-		FCollisionQueryParams traceParams;
-		traceParams.AddIgnoredActor(this);
-
-		FHitResult hit;
-
-		if (GetWorld()->LineTraceSingleByObjectType(hit, FollowCamera->GetComponentLocation(),
-			(FollowCamera->GetComponentLocation() + (FollowCamera->GetForwardVector() * BUILD_DISTANCE)),
-			ECC_GameTraceChannel7, traceParams)) {
-
-			if (Cast<AConstructibleWall>(hit.Actor))
-			{
-				spawnLocation = hit.ImpactPoint;
-
-				float gridSize = Cast<AConstructibleWall>(hit.Actor)->gridSizeInUnits;
-				float padding = Cast<AConstructibleWall>(hit.Actor)->gridBuildPadding;
-
-				//if HitNormal has X=1, positioning will be along X
-				//if HitNormal has Y=1, positioning will be along Y
-
-				int gridNoZ = spawnLocation.Z / gridSize;
-				float gridAlignedZ = (gridNoZ * gridSize) + (spawnLocation.Z < 0 ? -gridSize / 2 : gridSize / 2);
-
-				int gridNoXY;
-				float gridAlignedXY;
-
-				if (hit.ImpactNormal.Y == 1 || hit.ImpactNormal.Y == -1)
-				{
-					gridNoXY = spawnLocation.X / gridSize;
-					gridAlignedXY = (gridNoXY * gridSize) + (spawnLocation.X < 0 ? -gridSize / 2 : gridSize / 2);
-					spawnLocation = FVector(gridAlignedXY, spawnLocation.Y - (hit.ImpactNormal.Y * padding), gridAlignedZ);
-				}
-				else
-				{
-					gridNoXY = spawnLocation.Y / gridSize;
-					gridAlignedXY = (gridNoXY * gridSize) + (spawnLocation.Y < 0 ? -gridSize / 2 : gridSize / 2);
-					spawnLocation = FVector(spawnLocation.X - (hit.ImpactNormal.X * padding), gridAlignedXY, gridAlignedZ);
-				}
-
-				spawnRotation = hit.ImpactNormal.Rotation();
-
-				return true;
-			}
-			else
-			{
-				myHUD->ShowNotificationMessage("Aim at a constructible wall to build");
-			}
-		}
-
-		else
-		{
-			myHUD->ShowNotificationMessage("Aim at a constructible wall nearby to build");
-		}
-
-	}
-
-	spawnLocation = FVector::ZeroVector;
-	spawnRotation = FRotator::ZeroRotator;
-
-	return false;
 }
 
 bool AShooterSandboxCharacter::Server_AddEnergy_Validate(int amount)
@@ -543,30 +432,19 @@ void AShooterSandboxCharacter::Client_PlayerOutOfEnergy_Implementation()
 	myHUD->OutOfEnergy();
 }
 
-void AShooterSandboxCharacter::TryConstruct(TSubclassOf<class ABaseConstruct> construct)
+void AShooterSandboxCharacter::TryConstruct(FName constructRowName)
 {
-	if (construct == nullptr)
-	{
-		return;
-	}
-
 	if (!myEnergyPack)
 	{
 		myHUD->ShowNotificationMessage("Cannot construct without Energy Pack");
 		return;
 	}
-
-	FVector spawnLocation;
-	FRotator spawnRotation;
-	AConstructibleSurface* surfaceToSpawnOn;
-	if (GetSpawnLocationAndRotation(spawnLocation, spawnRotation, surfaceToSpawnOn, construct)) {
-		if (construct.GetDefaultObject()->constructionCost > myPlayerState->GetEnergy())
-		{
-			Client_PlayerOutOfEnergy();
-			return;
-		}
-		ServerConstruct(construct, surfaceToSpawnOn, myController, spawnLocation, spawnRotation);
+	if (!gameMode)
+	{
+		gameMode = GetWorld()->GetAuthGameMode<AShooterSandboxGameMode>();
 	}
+
+	gameMode->PlaceNewConstructRequest(this, myController, constructRowName, myPlayerState->GetEnergy());
 }
 
 bool AShooterSandboxCharacter::Client_SetOffensiveConstructInVicinity_Validate(ABaseOffensiveConstruct* construct) {
@@ -686,25 +564,6 @@ void AShooterSandboxCharacter::SwitchConstructionMode()
 void AShooterSandboxCharacter::ToggleConstructionMenu()
 {
 	Cast<AAShooterSandboxHUD>(Cast<AShooterSandboxController>(GetController())->GetHUD())->ToggleConstructionMenu();
-}
-
-bool AShooterSandboxCharacter::ServerConstruct_Validate(TSubclassOf<ABaseConstruct> construct, AConstructibleSurface* surfaceToSpawnOn, AShooterSandboxController* constructorController, FVector spawnLocation, FRotator spawnRotation)
-{
-	return true;
-}
-
-void AShooterSandboxCharacter::ServerConstruct_Implementation(TSubclassOf<ABaseConstruct> construct, AConstructibleSurface* surfaceToSpawnOn, AShooterSandboxController* constructorController, FVector spawnLocation, FRotator spawnRotation)
-{
-	if (construct == nullptr || constructorController == nullptr)
-	{
-		return;
-	}
-
-	UWorld* world = GetWorld();
-	if (world && world->GetAuthGameMode<AShooterSandboxGameMode>())
-	{
-		world->GetAuthGameMode<AShooterSandboxGameMode>()->Server_SpawnConstruct(construct, surfaceToSpawnOn, constructorController, spawnLocation, spawnRotation);
-	}
 }
 
 bool AShooterSandboxCharacter::Multicast_PickupOrDropWeapon_Validate(ABaseWeapon* theWeapon)

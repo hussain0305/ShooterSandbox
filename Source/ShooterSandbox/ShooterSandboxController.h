@@ -34,7 +34,7 @@ public:
 	void ClientPostLogin();
 
 	UFUNCTION(Client, reliable, WithValidation, BlueprintCallable, Category = "Player Stats")
-	void PostConstructionUpdate(TSubclassOf<ABaseConstruct> construct);
+	void PostConstructionUpdate(const FString& constructName, int constructCost);
 	
 //=#=#=#=#= HUD FUNCTIONS =#=#=#=#=
 

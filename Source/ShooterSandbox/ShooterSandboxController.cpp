@@ -53,14 +53,14 @@ void AShooterSandboxController::ClientPostLogin_Implementation()
 	}
 }
 
-bool AShooterSandboxController::PostConstructionUpdate_Validate(TSubclassOf<ABaseConstruct> construct)
+bool AShooterSandboxController::PostConstructionUpdate_Validate(const FString& constructName, int constructCost)
 {
 	return true;
 }
 
-void AShooterSandboxController::PostConstructionUpdate_Implementation(TSubclassOf<ABaseConstruct> construct)
+void AShooterSandboxController::PostConstructionUpdate_Implementation(const FString& constructName, int constructCost)
 {
-	Cast<AAShooterSandboxHUD>(GetHUD())->ShowAlertMessage("" + construct.GetDefaultObject()->constructName + " constructed ( - " + FString::FromInt(construct.GetDefaultObject()->constructionCost) +" )", 1);
+	Cast<AAShooterSandboxHUD>(GetHUD())->ShowAlertMessage("" + constructName + " constructed ( - " + FString::FromInt(constructCost) +" )", 1);
 }
 
 void AShooterSandboxController::ProxyForHUD_AlertMessage_Implementation(const FString& message, int greenRedNeut)

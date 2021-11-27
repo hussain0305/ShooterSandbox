@@ -21,6 +21,7 @@ public:
 	const int MAX_ENERGY_AMOUNT = 500;
 	const float DEFAULT_PLAYER_BALANCE = 100;
 	const float DEFAULT_PLAYER_HEALTH = 25;
+	const float BUILD_DISTANCE = 1500;
 
 /**************************
 *       VARIABLES         *
@@ -42,6 +43,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pickups")
 	float pickupInterval = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Constructs Database")
+	class UDataTable* constructsDataTable;
 
 /**************************
 *       FUNCTIONS         *
@@ -65,9 +69,22 @@ public:
 
 	void Server_GiveEnergyToPlayers();
 
-	void Server_SpawnConstruct(TSubclassOf<class ABaseConstruct> construct, class AConstructibleSurface* surfaceToSpawnOn, class AShooterSandboxController* playerController, FVector spawnPosition, FRotator spawnRotation);
+	bool GetSpawnLocationAndRotation(FVector &spawnLocation, FRotator &spawnRotation, class AConstructibleSurface* &surfaceToSpawnOn, bool canBeParented, FString& constructName, class AShooterSandboxCharacter* spawnerPlayer);
+
+	void PlaceNewConstructRequest(class AShooterSandboxCharacter* spawnerPlayer, class AShooterSandboxController* playerController, FName constructRowName, int playerEnergyBalance);
+
+	void Server_SpawnConstruct(FName constructRowName, class AConstructibleSurface* surfaceToSpawnOn, class AShooterSandboxController* playerController, FVector spawnPosition, FRotator spawnRotation);
 
 	void Temp_PrintLog();
 
 	FRotator GetAlignedRotation(FRotator rawRotation);
+
+//=#=#=#=#=	FETCHING FROM DATABASE =#=#=#=#=
+
+	bool GetConstructDetails(FName rowName, struct FConstructsDatabase*& databaseRow);
+	
+	int GetConstructCost(FName rowName);
+
+	FString& GetConstructName(FName rowName);
+
 };

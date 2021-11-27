@@ -44,6 +44,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int constructionCost;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString constructRowName;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Materials)
 	TArray<class UMaterialInstance*> appearanceOptions;
 
@@ -70,6 +73,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Materials")
 	void RefreshAppearance();
+
+	UFUNCTION(BlueprintCallable, Category = "Construct Details")
+	void FetchConstructDetailsFromDatabase();
 
 	UFUNCTION(Category = "Materials")
 	void FormationScaling(FVector current, FVector fullScale, float alpha);

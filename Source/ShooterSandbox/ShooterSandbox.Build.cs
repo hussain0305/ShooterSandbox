@@ -8,6 +8,6 @@ public class ShooterSandbox : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "HeadMountedDisplay", "OnlineSubsystem", "﻿OnlineSubsystemSteam﻿" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "HeadMountedDisplay", "OnlineSubsystem", "﻿OnlineSubsystemSteam﻿", "ApexDestruction" });
 	}
 }
